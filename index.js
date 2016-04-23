@@ -3,6 +3,9 @@ var express = require('express'),
 	path = require('path'),
 	server = express();
 
+
+server.use('/public', express.static(__dirname + '/knockout_todo/public'));
+
 server.get('/', function(req, res){
 	var projects = fs.readdirSync(__dirname).filter(function(file){
 		return fs.statSync(path.join(__dirname, file)).isDirectory() && file !== 'node_modules' && file[0] !== '.';
