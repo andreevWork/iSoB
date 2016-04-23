@@ -16,12 +16,17 @@
 		<form role="form">
 		  <div class="form-group">
 		    <label for="Task">Add task</label>
-		    <input type="text" class="form-control" id="Task" placeholder="Enter task">
+		    <input type="text" class="form-control" id="Task" placeholder="Enter task" data-bind="value: task">
 		  </div>
-		  <button type="submit" class="btn btn-default">Add</button>
+		  <div class="btn btn-default" data-bind="click: click">Add</div>
 		</form>
 		<h3>Задачи</h3>
-		<ul></ul>
+		<ul data-bind="foreach: tasks">
+			<li>
+				<span data-bind="text: title"></span>
+				<div class="btn btn-primary" data-bind="text: $root.getTitleButton($data), click: $root.toggleComplete"></div>
+			</li>
+		</ul>
 	</div>
 
 	</div>

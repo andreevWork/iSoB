@@ -52,7 +52,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	console.log(_knockout2.default);
+	var ViewModel = function ViewModel() {
+		this.task = _knockout2.default.observable();
+		this.tasks = _knockout2.default.observableArray([]);
+
+		this.click = function (data, event) {
+			this.tasks.push({ title: this.task(), is_completed: _knockout2.default.observable(false) });
+			this.task('');
+		};
+
+		this.getTitleButton = function (task) {
+			return !task.is_completed() ? ' Завершить' : 'Возобновить';
+		};
+
+		this.toggleComplete = function (task) {
+			return task.is_completed(!task.is_completed());
+		};
+	};
+
+	window.onload = function () {
+		return _knockout2.default.applyBindings(new ViewModel());
+	};
 
 /***/ },
 /* 1 */
