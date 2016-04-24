@@ -54,19 +54,54 @@
 
 	var ViewModel = function ViewModel() {
 		this.task = _knockout2.default.observable();
+		this.prior = _knockout2.default.observable();
 		this.tasks = _knockout2.default.observableArray([]);
 
 		this.click = function (data, event) {
-			this.tasks.push({ title: this.task(), is_completed: _knockout2.default.observable(false) });
+			if (!this.task()) return;
+			this.tasks.push({ title: this.task(), prior: _knockout2.default.observable(this.prior()), is_completed: _knockout2.default.observable(false), edit: _knockout2.default.observable(false) });
 			this.task('');
+			this.tasks.sort(function (t1, t2) {
+				if (t1.prior() == 'red' && t2.prior() !== 'red') {
+					return -1;
+				}
+				if (t2.prior() == 'red' && t1.prior() !== 'red') {
+					return 1;
+				}
+				if (t1.prior() == 'blue' && t2.prior() !== 'blue') {
+					return -1;
+				}
+				if (t2.prior() == 'blue' && t1.prior() !== 'blue') {
+					return 1;
+				}
+				return 0;
+			});
+			console.log(this.tasks());
 		};
 
 		this.getTitleButton = function (task) {
 			return !task.is_completed() ? ' Завершить' : 'Возобновить';
 		};
 
+		this.getTitleEdit = function (task) {
+			return !task.edit() ? ' Изменить' : 'Сохранить';
+		};
+
 		this.toggleComplete = function (task) {
 			return task.is_completed(!task.is_completed());
+		};
+
+		this.toggleEdit = function (task) {
+			return task.edit(!task.edit());
+		};
+
+		this.getClass = function (task) {
+			var map = {
+				red: 'list-group-item-danger',
+				blue: 'list-group-item-info',
+				green: 'list-group-item-success'
+			};
+			return task.is_completed() ? 'disabled' : map[task.prior()];
 		};
 	};
 

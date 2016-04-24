@@ -18,13 +18,25 @@
 		    <label for="Task">Add task</label>
 		    <input type="text" class="form-control" id="Task" placeholder="Enter task" data-bind="value: task">
 		  </div>
+		  <div class="form-group">
+		  <input type="radio" name="prior" value="red" data-bind="checked: prior" />
+		  <input type="radio" name="prior" value="blue" checked data-bind="checked: prior" />
+		  <input type="radio" name="prior" value="green" data-bind="checked: prior" />
+		  </div>
 		  <div class="btn btn-default" data-bind="click: click">Add</div>
 		</form>
 		<h3>Задачи</h3>
-		<ul data-bind="foreach: tasks">
-			<li>
-				<span data-bind="text: title"></span>
-				<div class="btn btn-primary" data-bind="text: $root.getTitleButton($data), click: $root.toggleComplete"></div>
+		<ul class="list-group" data-bind="foreach: tasks">
+			<li class="list-group-item" data-bind="css: $root.getClass($data)">
+				<!-- ko ifnot: edit -->
+					<div class="clearfix"><span data-bind="text: title"></span></div>
+					<button class="btn btn-primary btn-sm" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
+					<button class="btn btn-primary btn-sm" data-bind="text: $root.getTitleButton($data), click: $root.toggleComplete"></button>
+				<!-- /ko -->
+				<!-- ko if: edit -->
+					<div class="clearfix"><input type="text" data-bind="value: title"></div>			
+					<button class="btn btn-primary btn-sm clearfix" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
+				<!-- /ko -->
 			</li>
 		</ul>
 	</div>
