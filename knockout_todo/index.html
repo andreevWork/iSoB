@@ -6,9 +6,6 @@
 	<script type="text/javascript" src="public/index.js"></script>
 	<link rel="stylesheet" href="/public/index.css" crossorigin="anonymous">
 	<style type="text/css">
-		body{
-			padding-top: 50px;
-		}
 		.empty-task{
 			height: 70px;
 			opacity: 0.8;
@@ -40,6 +37,10 @@
 	</style>
 </head>
 <body>
+	<ol class="breadcrumb">
+	  <li><a href="/">Home</a></li>
+	  <li class="active">Knockout Todo</li>
+	</ol>
 
 	<script type="text/html" id="list">
 		<ul class="list-group" data-bind="foreach: tasks">
