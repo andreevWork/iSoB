@@ -46,67 +46,171 @@
 
 	'use strict';
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 	var _knockout = __webpack_require__(1);
 
 	var _knockout2 = _interopRequireDefault(_knockout);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var ViewModel = function ViewModel() {
-		this.task = _knockout2.default.observable();
-		this.prior = _knockout2.default.observable();
-		this.tasks = _knockout2.default.observableArray([]);
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-		this.click = function (data, event) {
-			if (!this.task()) return;
-			this.tasks.push({ title: this.task(), prior: _knockout2.default.observable(this.prior()), is_completed: _knockout2.default.observable(false), edit: _knockout2.default.observable(false) });
-			this.task('');
-			this.tasks.sort(function (t1, t2) {
-				if (t1.prior() == 'red' && t2.prior() !== 'red') {
-					return -1;
-				}
-				if (t2.prior() == 'red' && t1.prior() !== 'red') {
-					return 1;
-				}
-				if (t1.prior() == 'blue' && t2.prior() !== 'blue') {
-					return -1;
-				}
-				if (t2.prior() == 'blue' && t1.prior() !== 'blue') {
-					return 1;
-				}
-				return 0;
-			});
-			console.log(this.tasks());
-		};
+	var Task = function Task() {
+		var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-		this.getTitleButton = function (task) {
-			return !task.is_completed() ? ' Завершить' : 'Возобновить';
-		};
+		var _ref$title = _ref.title;
+		var title = _ref$title === undefined ? '' : _ref$title;
+		var _ref$is_completed = _ref.is_completed;
+		var is_completed = _ref$is_completed === undefined ? _knockout2.default.observable(false) : _ref$is_completed;
+		var _ref$edit = _ref.edit;
+		var edit = _ref$edit === undefined ? _knockout2.default.observable(false) : _ref$edit;
 
-		this.getTitleEdit = function (task) {
-			return !task.edit() ? ' Изменить' : 'Сохранить';
-		};
-
-		this.toggleComplete = function (task) {
-			return task.is_completed(!task.is_completed());
-		};
-
-		this.toggleEdit = function (task) {
-			return task.edit(!task.edit());
-		};
-
-		this.getClass = function (task) {
-			var map = {
-				red: 'list-group-item-danger',
-				blue: 'list-group-item-info',
-				green: 'list-group-item-success'
-			};
-			return task.is_completed() ? 'disabled' : map[task.prior()];
+		return {
+			title: title,
+			is_completed: is_completed,
+			edit: edit,
+			id: Task.counter++
 		};
 	};
 
+	Task.counter = 0;
+
+	var Tasks = function () {
+		function Tasks() {
+			var _this = this;
+
+			_classCallCheck(this, Tasks);
+
+			this.max_length = 25;
+			this.prior_array = [{ title: 'Срочная', code: '1' }, { title: 'Важная', code: '2' }, { title: 'Второстепенная', code: '3' }];
+
+			_knockout2.default.extenders.isValidTitle = this.isValidTitle.bind(this);
+			this.task = _knockout2.default.observable().extend({ isValidTitle: true });
+			this.prior = _knockout2.default.observable(this.prior_array[1].code);
+
+			this.list = _knockout2.default.observableArray(this.prior_array.map(function (prior) {
+				return { tasks: _knockout2.default.observableArray([new Task()]), prior: prior.code };
+			}));
+
+			this.hint_input = _knockout2.default.computed(function () {
+				var length = _this.task() && _this.task().trim().length || 0;
+				return length > _this.max_length ? 'Вы превысили лимит длины названия задачи на ' + (length - _this.max_length) + '.' : 'У вас осталось ' + (_this.max_length - length) + ' символов.';
+			});
+
+			this.toggleComplete = this.toggleComplete.bind(this);
+		}
+
+		_createClass(Tasks, [{
+			key: 'isValidTitle',
+			value: function isValidTitle(title) {
+				var max = this.max_length;
+				title.isValid = _knockout2.default.observable('Ну напиши хоть что-нибудь!');
+				title.subscribe(function (newValue) {
+					title.isValid = _knockout2.default.observable(false);
+					if (!newValue.trim()) {
+						title.isValid('Ну напиши хоть что-нибудь!');
+					}
+
+					if (newValue.trim().length > max) {
+						title.isValid('Превышен лимит символов!');
+					}
+				});
+				return title;
+			}
+		}, {
+			key: 'addTask',
+			value: function addTask() {
+				if (!!this.task.isValid()) return alert(this.task.isValid());
+
+				var task = this.task().trim(),
+				    list = this.getTasksByPrior(this.prior());
+
+				//Если это первая задача, необходимо удалить моковую задачу c пустым заголовком
+				if (this.isEmptyListByPrior(this.prior())) {
+					list.tasks.pop();
+				}
+
+				list.tasks.push(new Task({ title: task }));
+				this.task('');
+			}
+		}, {
+			key: 'getTitleButton',
+			value: function getTitleButton(task) {
+				return !task.is_completed() ? ' Завершить' : 'Возобновить';
+			}
+		}, {
+			key: 'getTitleEdit',
+			value: function getTitleEdit(task) {
+				return !task.edit() ? ' Изменить' : 'Сохранить';
+			}
+		}, {
+			key: 'toggleComplete',
+			value: function toggleComplete(task) {
+				task.is_completed(!task.is_completed());
+				this.sortLists();
+			}
+		}, {
+			key: 'sortLists',
+			value: function sortLists() {
+				_knockout2.default.utils.arrayForEach(this.list(), function (list) {
+					//Сортировка по айдишникам
+					list.tasks(list.tasks().sort(function (t1, t2) {
+						if (t1.id > t2.id) {
+							return 1;
+						}
+
+						if (t1.id && t2.id) {
+							return -1;
+						}
+					}));
+					//Сортировка чтобы выполненные задачи были внизу списка
+					list.tasks(list.tasks().sort(function (t1, t2) {
+						if (t1.is_completed() && !t2.is_completed()) {
+							return 1;
+						}
+
+						if (!t1.is_completed() && t2.is_completed()) {
+							return -1;
+						}
+					}));
+				});
+			}
+		}, {
+			key: 'toggleEdit',
+			value: function toggleEdit(task) {
+				task.edit(!task.edit());
+			}
+		}, {
+			key: 'getTasksByPrior',
+			value: function getTasksByPrior(prior) {
+				return _knockout2.default.utils.arrayFirst(this.list(), function (tasks) {
+					return tasks.prior == prior;
+				});
+			}
+		}, {
+			key: 'isEmptyListByPrior',
+			value: function isEmptyListByPrior(prior) {
+				var list = this.getTasksByPrior(prior);
+				return list.tasks().length === 1 && !list.tasks()[0].title;
+			}
+		}, {
+			key: 'getClass',
+			value: function getClass(prior, is_completed) {
+				var map = {
+					1: 'list-group-item-danger',
+					2: 'list-group-item-info',
+					3: 'list-group-item-success'
+				};
+				return map[prior] + (this.isEmptyListByPrior(prior) ? ' empty-task' : '') + (is_completed() ? ' disabled' : '');
+			}
+		}]);
+
+		return Tasks;
+	}();
+
 	window.onload = function () {
-		return _knockout2.default.applyBindings(new ViewModel());
+		_knockout2.default.applyBindings(new Tasks());
 	};
 
 /***/ },
