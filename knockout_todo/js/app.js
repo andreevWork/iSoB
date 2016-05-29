@@ -13,7 +13,6 @@ Task.counter = 0;
 
 class Tasks {
 	constructor(){
-		this.max_length = 25;
 		this.prior_array = [{ title: 'Срочная', code: '1'}, {title: 'Важная', code: '2'}, {title: 'Второстепенная', code: '3'}];
 
 		ko.extenders.isValidTitle = this.isValidTitle.bind(this);
@@ -32,15 +31,15 @@ class Tasks {
 
 	isValidTitle(title) {
 		var max = this.max_length;
-	   	title.isValid = ko.observable('Ну напиши хоть что-нибудь!');
-		title.subscribe(function(newValue) {
+	   	title.isValid = ko.observable(this.error_messages.empty);
+		title.subscribe((newValue) => {
 	   		title.isValid = ko.observable(false);
 			if (!newValue.trim()) {
-				title.isValid('Ну напиши хоть что-нибудь!');
+				title.isValid(this.error_messages.empty);
 			}
 
 			if(newValue.trim().length > max) {
-				title.isValid('Превышен лимит символов!');
+				title.isValid(this.error_messages.long);
 			}
 	    });
 		return title;
@@ -76,8 +75,10 @@ class Tasks {
 
 	sortLists() {
 		ko.utils.arrayForEach(this.list(), (list) => {
+			var tasks = list.tasks();
 			//Сортировка по айдишникам
-			list.tasks(list.tasks().sort(function(t1, t2){
+			tasks
+			.sort(function(t1, t2){
 				if(t1.id > t2.id){
 					return 1;
 				}
@@ -85,9 +86,9 @@ class Tasks {
 				if(t1.id && t2.id){
 					return -1;
 				}
-			}));
+			})
 			//Сортировка чтобы выполненные задачи были внизу списка
-			list.tasks(list.tasks().sort(function(t1, t2){
+			.sort(function(t1, t2){
 				if(t1.is_completed() && !t2.is_completed()){
 					return 1;
 				}
@@ -95,7 +96,8 @@ class Tasks {
 				if(!t1.is_completed() && t2.is_completed()){
 					return -1;
 				}
-			}));
+			});
+			list.tasks(tasks);
 		});
 	}
 
@@ -122,6 +124,13 @@ class Tasks {
 		}
 		return map[prior] + (this.isEmptyListByPrior(prior) ? ' empty-task' : '') + (is_completed() ? ' disabled' : '');
 	}
+
+	error_messages = {
+		'empty' : 'Ну напиши хоть что-нибудь!',
+		'long' : 'Превышен лимит символов!',
+	};
+
+	max_length = 25;
 }
 
 window.onload = () => {

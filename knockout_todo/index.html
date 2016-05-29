@@ -1,96 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>Knockout Todo</title>
-	<script type="text/javascript" src="public/index.js"></script>
-	<link rel="stylesheet" href="/public/index.css" crossorigin="anonymous">
-	<style type="text/css">
-		.empty-task{
-			height: 70px;
-			opacity: 0.8;
-			border-style: dashed;
-			border-color: black;
-		}
-		.gu-mirror {
-		  position: fixed !important;
-		  margin: 0 !important;
-		  z-index: 9999 !important;
-		  opacity: 0.8;
-		  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
-		  filter: alpha(opacity=80);
-		}
-		.gu-hide {
-		  display: none !important;
-		}
-		.gu-unselectable {
-		  -webkit-user-select: none !important;
-		  -moz-user-select: none !important;
-		  -ms-user-select: none !important;
-		  user-select: none !important;
-		}
-		.gu-transit {
-		  opacity: 0.2;
-		  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
-		  filter: alpha(opacity=20);
-		}
-	</style>
-</head>
-<body>
-	<ol class="breadcrumb">
-	  <li><a href="/">Home</a></li>
-	  <li class="active">Knockout Todo</li>
-	</ol>
-
-	<script type="text/html" id="list">
-		<ul class="list-group" data-bind="foreach: tasks">
-			<li class="list-group-item" data-bind="css: $root.getClass($parent.prior, is_completed)">
-				<!-- ko if: title -->
-					<!-- ko ifnot: edit -->
-						<div class="clearfix"><span data-bind="text: title"></span></div>
-						<!-- ko ifnot: is_completed -->
-							<button class="btn btn-default btn-sm" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
-						<!-- /ko -->
-						<button class="btn btn-default btn-sm" data-bind="text: $root.getTitleButton($data), click: $root.toggleComplete"></button>
+<style type="text/css">
+	.empty-task{
+		height: 70px;
+		opacity: 0.8;
+		border-style: dashed;
+		border-color: black;
+	}
+	.btn-default {
+		margin-top: 20px;
+	}
+</style>
+<script type="text/html" id="list">
+	<ul class="list-group" data-bind="foreach: tasks">
+		<li class="list-group-item" data-bind="css: $root.getClass($parent.prior, is_completed)">
+			<!-- ko if: title -->
+				<!-- ko ifnot: edit -->
+					<div class="clearfix"><span data-bind="text: title"></span></div>
+					<!-- ko ifnot: is_completed -->
+						<button class="btn btn-default btn-sm" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
 					<!-- /ko -->
-					<!-- ko if: edit -->
-						<div class="clearfix"><input type="text" data-bind="value: title"></div>			
-						<button class="btn btn-default btn-sm clearfix" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
-					<!-- /ko -->
+					<button class="btn btn-default btn-sm" data-bind="text: $root.getTitleButton($data), click: $root.toggleComplete"></button>
 				<!-- /ko -->
-			</li>
-		</ul>
-	</script>
+				<!-- ko if: edit -->
+					<div class="clearfix"><input type="text" data-bind="value: title"></div>
+					<button class="btn btn-default btn-sm clearfix" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
+				<!-- /ko -->
+			<!-- /ko -->
+		</li>
+	</ul>
+</script>
 
-	<div class="container">
-	<div class="row">
-		<div class="col-md-2"></div>
-		<div class="col-md-6">
-			<form role="form" class="form-horizontal" data-bind="submit: addTask">
-				<div class="form-group">
-					<label for="Task"  class="col-sm-2 control-label">Add task</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control" id="Task" placeholder="Enter task" data-bind="value: task, valueUpdate: 'afterkeydown'">						
-						<p class="help-block" data-bind="text: hint_input"></p>
-						<div data-bind="foreach: prior_array">
-							<label data-bind="text: title, attr: {for: code}"></label>
-							<input data-bind="attr: {value: code, id: code}, checked: $root.prior" type="radio" />
-						</div>
-						<button class="btn btn-primary">Add</button>
+<div class="container">
+<div class="row">
+	<div class="col-md-2"></div>
+	<div class="col-md-6">
+		<form role="form" class="form-horizontal" data-bind="submit: addTask">
+			<div class="form-group">
+				<label for="Task"  class="col-sm-2 control-label">Добавить задачу</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="Task" placeholder="Введите задачу" data-bind="value: task, valueUpdate: 'afterkeydown'">
+					<p class="help-block" data-bind="text: hint_input"></p>
+					<div data-bind="foreach: prior_array">
+						<label data-bind="text: title, attr: {for: code}"></label>
+						<input data-bind="attr: {value: code, id: code}, checked: $root.prior" type="radio" />
 					</div>
+					<button class="btn btn-primary">Добавить</button>
 				</div>
-			</form>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-md-2"></div>
-		<div class="col-md-6">
-			<h2>Задачи</h2>
-			<div data-bind="foreach: list">
-				<div data-bind="template: {name: 'list', data: { tasks: tasks, prior: prior}}"></div>
 			</div>
+		</form>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-2"></div>
+	<div class="col-md-6">
+		<h2>Задачи</h2>
+		<div data-bind="foreach: list">
+			<div data-bind="template: {name: 'list', data: { tasks: tasks, prior: prior}}"></div>
 		</div>
 	</div>
-</body>
-
-</html>
+</div>

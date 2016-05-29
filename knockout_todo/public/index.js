@@ -82,7 +82,12 @@
 
 			_classCallCheck(this, Tasks);
 
+			this.error_messages = {
+				'empty': 'Ну напиши хоть что-нибудь!',
+				'long': 'Превышен лимит символов!'
+			};
 			this.max_length = 25;
+
 			this.prior_array = [{ title: 'Срочная', code: '1' }, { title: 'Важная', code: '2' }, { title: 'Второстепенная', code: '3' }];
 
 			_knockout2.default.extenders.isValidTitle = this.isValidTitle.bind(this);
@@ -104,16 +109,18 @@
 		_createClass(Tasks, [{
 			key: 'isValidTitle',
 			value: function isValidTitle(title) {
+				var _this2 = this;
+
 				var max = this.max_length;
-				title.isValid = _knockout2.default.observable('Ну напиши хоть что-нибудь!');
+				title.isValid = _knockout2.default.observable(this.error_messages.empty);
 				title.subscribe(function (newValue) {
 					title.isValid = _knockout2.default.observable(false);
 					if (!newValue.trim()) {
-						title.isValid('Ну напиши хоть что-нибудь!');
+						title.isValid(_this2.error_messages.empty);
 					}
 
 					if (newValue.trim().length > max) {
-						title.isValid('Превышен лимит символов!');
+						title.isValid(_this2.error_messages.long);
 					}
 				});
 				return title;
@@ -154,8 +161,9 @@
 			key: 'sortLists',
 			value: function sortLists() {
 				_knockout2.default.utils.arrayForEach(this.list(), function (list) {
+					var tasks = list.tasks();
 					//Сортировка по айдишникам
-					list.tasks(list.tasks().sort(function (t1, t2) {
+					tasks.sort(function (t1, t2) {
 						if (t1.id > t2.id) {
 							return 1;
 						}
@@ -163,9 +171,9 @@
 						if (t1.id && t2.id) {
 							return -1;
 						}
-					}));
+					})
 					//Сортировка чтобы выполненные задачи были внизу списка
-					list.tasks(list.tasks().sort(function (t1, t2) {
+					.sort(function (t1, t2) {
 						if (t1.is_completed() && !t2.is_completed()) {
 							return 1;
 						}
@@ -173,7 +181,8 @@
 						if (!t1.is_completed() && t2.is_completed()) {
 							return -1;
 						}
-					}));
+					});
+					list.tasks(tasks);
 				});
 			}
 		}, {

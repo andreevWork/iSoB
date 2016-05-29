@@ -7,11 +7,11 @@ module.exports = {
 	module: {
 	  loaders: [
 	    {
-	      test: /\.js$/,
-	      exclude: /(node_modules|bower_components)/,
+	      test: /\.jsx?$/,
+	      exclude: /(node_modules)/,
 	      loader: 'babel',
 	      query: {
-	        presets: ['es2015'], 
+	        presets: ['es2015', 'react'],
 			plugins: ["transform-class-properties"]
 	      }
 	    }
