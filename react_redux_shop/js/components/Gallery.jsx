@@ -14,7 +14,8 @@ export default class Gallery extends React.Component {
     state = {
         data: [],
         last_update: Date.now(),
-        queue_action: null
+        queue_action: null,
+        page: 0
     };
 
     initQueue() {
@@ -22,7 +23,7 @@ export default class Gallery extends React.Component {
         this.queue.setSize(DEFAULT_COLLECTION_SIZE);
     }
     
-    changeState(queue_action = null) {
+    changeState(queue_action = null, callback) {
         this.setState({
             queue_action,
             data: this.queue.getActual(),
@@ -31,8 +32,11 @@ export default class Gallery extends React.Component {
             count: this.queue.getCount(),
             has_next: !!this.queue.getNext().length,
             has_prev: !!this.queue.getPrev().length,
-            last_update:  Date.now()
-        });
+            last_update:  Date.now(),
+            // Иногда состояние меняется а параметры запроса нет, но данные необходимо перезапросить
+            // Для этого нужен этот параметр
+            page: Math.floor(Math.random() * 50)
+        }, callback);
     }
 
     componentDidMount() {
@@ -68,8 +72,9 @@ export default class Gallery extends React.Component {
         this.queue.moveForward();
 
         if(!this.queue.isEnd()) {
-            this.changeState(QueueActionsTypes.FORWARD);
-            this.context.store.dispatch(changeSkip(this.queue.getActualRange().to));
+            this.changeState(QueueActionsTypes.FORWARD, () => {
+                this.context.store.dispatch(changeSkip(this.queue.getActualRange().to, this.state.page));
+            });
         } else {
             // Если дошли до конца очереди, грузить уже нечего, просто обновляем состояние
             this.changeState();
@@ -81,11 +86,11 @@ export default class Gallery extends React.Component {
 
         if(!this.queue.isStart()) {
             // Если не дошли до начала просто двигаем указатель в очереди назад
-            this.changeState(QueueActionsTypes.BACK);
-
-            let skip = this.queue.getActualRange().to - DEFAULT_COLLECTION_SIZE * 2;
-            skip = skip > 0 ? skip : 0;
-            this.context.store.dispatch(changeSkip(skip));
+            this.changeState(QueueActionsTypes.BACK, () => {
+                let skip = this.queue.getActualRange().to - DEFAULT_COLLECTION_SIZE * 2;
+                skip = skip > 0 ? skip : 0;
+                this.context.store.dispatch(changeSkip(skip, this.state.page));
+            });
         } else {
             // Если дошли в начало ничего грузить не нужно, просто обновить состояние компонента
             this.changeState();
@@ -131,8 +136,8 @@ const GalleryItem = ({name, rating, price, ORM, MORM, material, processor, video
                         <div>{rating}  <span className="glyphicon glyphicon-star" /></div>
                         <div>{screen_size} <span className="glyphicon glyphicon-resize-full" /></div>
                     </div>
-                    <div className="text-center">
-                        <img src="/public/1.png" width="310" className="img-rounded" />
+                    <div className="text-center gallery__img_block">
+                        <img src={`/public/img/notes/note_${Math.floor(Math.random() * 5) + 1}.png`} width="200" className="img-rounded" />
                         <h4>{name}</h4>
                     </div>
                     <div className="caption">

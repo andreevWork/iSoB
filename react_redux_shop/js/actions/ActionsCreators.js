@@ -10,10 +10,11 @@ export function changeQuery(key, value) {
     }
 }
 
-export function changeSkip(skip) {
+export function changeSkip(skip, page) {
     return {
         type: ActionsQuery.MOVE,
-        skip
+        skip,
+        page
     }
 }
 

@@ -28778,10 +28778,11 @@
 	    };
 	}
 
-	function changeSkip(skip) {
+	function changeSkip(skip, page) {
 	    return {
 	        type: _ActionsTypes2.default.MOVE,
-	        skip: skip
+	        skip: skip,
+	        page: page
 	    };
 	}
 
@@ -29226,7 +29227,8 @@
 	        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(Gallery)).call.apply(_Object$getPrototypeO, [this].concat(args))), _this), _this.state = {
 	            data: [],
 	            last_update: Date.now(),
-	            queue_action: null
+	            queue_action: null,
+	            page: 0
 	        }, _temp), _possibleConstructorReturn(_this, _ret);
 	    }
 
@@ -29240,6 +29242,7 @@
 	        key: 'changeState',
 	        value: function changeState() {
 	            var queue_action = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+	            var callback = arguments[1];
 
 	            this.setState({
 	                queue_action: queue_action,
@@ -29249,8 +29252,11 @@
 	                count: this.queue.getCount(),
 	                has_next: !!this.queue.getNext().length,
 	                has_prev: !!this.queue.getPrev().length,
-	                last_update: Date.now()
-	            });
+	                last_update: Date.now(),
+	                // Иногда состояние меняется а параметры запроса нет, но данные необходимо перезапросить
+	                // Для этого нужен этот параметр
+	                page: Math.floor(Math.random() * 50)
+	            }, callback);
 	        }
 	    }, {
 	        key: 'componentDidMount',
@@ -29291,11 +29297,14 @@
 	    }, {
 	        key: 'goForward',
 	        value: function goForward() {
+	            var _this3 = this;
+
 	            this.queue.moveForward();
 
 	            if (!this.queue.isEnd()) {
-	                this.changeState(_ActionsTypes.QueueActionsTypes.FORWARD);
-	                this.context.store.dispatch((0, _ActionsCreators.changeSkip)(this.queue.getActualRange().to));
+	                this.changeState(_ActionsTypes.QueueActionsTypes.FORWARD, function () {
+	                    _this3.context.store.dispatch((0, _ActionsCreators.changeSkip)(_this3.queue.getActualRange().to, _this3.state.page));
+	                });
 	            } else {
 	                // Если дошли до конца очереди, грузить уже нечего, просто обновляем состояние
 	                this.changeState();
@@ -29304,15 +29313,17 @@
 	    }, {
 	        key: 'goBack',
 	        value: function goBack() {
+	            var _this4 = this;
+
 	            this.queue.moveBack();
 
 	            if (!this.queue.isStart()) {
 	                // Если не дошли до начала просто двигаем указатель в очереди назад
-	                this.changeState(_ActionsTypes.QueueActionsTypes.BACK);
-
-	                var skip = this.queue.getActualRange().to - _config.DEFAULT_COLLECTION_SIZE * 2;
-	                skip = skip > 0 ? skip : 0;
-	                this.context.store.dispatch((0, _ActionsCreators.changeSkip)(skip));
+	                this.changeState(_ActionsTypes.QueueActionsTypes.BACK, function () {
+	                    var skip = _this4.queue.getActualRange().to - _config.DEFAULT_COLLECTION_SIZE * 2;
+	                    skip = skip > 0 ? skip : 0;
+	                    _this4.context.store.dispatch((0, _ActionsCreators.changeSkip)(skip, _this4.state.page));
+	                });
 	            } else {
 	                // Если дошли в начало ничего грузить не нужно, просто обновить состояние компонента
 	                this.changeState();
@@ -29343,7 +29354,7 @@
 	    }, {
 	        key: 'renderNavigator',
 	        value: function renderNavigator() {
-	            var _this3 = this;
+	            var _this5 = this;
 
 	            return _react2.default.createElement(
 	                'div',
@@ -29358,14 +29369,14 @@
 	                        this.state.has_prev && _react2.default.createElement(
 	                            'button',
 	                            { onClick: function onClick() {
-	                                    return _this3.goBack();
+	                                    return _this5.goBack();
 	                                }, type: 'button', className: 'btn btn-primary btn-xs' },
 	                            'Назад'
 	                        ),
 	                        this.state.has_next && _react2.default.createElement(
 	                            'button',
 	                            { type: 'button', onClick: function onClick() {
-	                                    return _this3.goForward();
+	                                    return _this5.goForward();
 	                                }, className: 'btn btn-primary btn-xs' },
 	                            'Далее'
 	                        )
@@ -29424,8 +29435,8 @@
 	                ),
 	                _react2.default.createElement(
 	                    'div',
-	                    { className: 'text-center' },
-	                    _react2.default.createElement('img', { src: '/public/1.png', width: '310', className: 'img-rounded' }),
+	                    { className: 'text-center gallery__img_block' },
+	                    _react2.default.createElement('img', { src: '/public/img/notes/note_' + (Math.floor(Math.random() * 5) + 1) + '.png', width: '200', className: 'img-rounded' }),
 	                    _react2.default.createElement(
 	                        'h4',
 	                        null,
@@ -29572,19 +29583,8 @@
 	        return Object.assign({}, query, { key_sort: action.key_sort, sort_direction: action.sort_direction }, _config.DEFAULT_SIZE_OBJECT);
 	    }
 
-	    if (action.type === _ActionsTypes2.default.MOVE_FORWARD) {
-	        var skip = +query.skip === 0 ? _config.DEFAULT_COLLECTION_SIZE * 2 : +query.skip + _config.DEFAULT_COLLECTION_SIZE;
-	        return Object.assign({}, query, { skip: skip, limit: _config.DEFAULT_COLLECTION_SIZE });
-	    }
-
 	    if (action.type === _ActionsTypes2.default.MOVE) {
-	        return Object.assign({}, query, { skip: action.skip, limit: _config.DEFAULT_COLLECTION_SIZE });
-	    }
-
-	    if (action.type === _ActionsTypes2.default.MOVE_BACK && +query.skip !== 0) {
-	        var _skip = +query.skip === _config.DEFAULT_COLLECTION_SIZE * 2 ? 0 : +query.skip - _config.DEFAULT_COLLECTION_SIZE;
-	        return Object.assign({}, query, { skip: _skip,
-	            limit: _config.DEFAULT_COLLECTION_SIZE });
+	        return Object.assign({}, query, { page: action.page, skip: action.skip, limit: _config.DEFAULT_COLLECTION_SIZE });
 	    }
 
 	    return query;

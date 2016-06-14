@@ -29,19 +29,8 @@ export default function QueryReducer(query = {}, action) {
         return Object.assign({}, query, {key_sort: action.key_sort, sort_direction: action.sort_direction}, DEFAULT_SIZE_OBJECT);
     }
 
-    if(action.type === ActionsQuery.MOVE_FORWARD){
-        let skip = +query.skip === 0 ? DEFAULT_COLLECTION_SIZE * 2 : (+query.skip + DEFAULT_COLLECTION_SIZE);
-        return Object.assign({}, query, {skip, limit: DEFAULT_COLLECTION_SIZE});
-    }
-
     if(action.type === ActionsQuery.MOVE){
-        return Object.assign({}, query, {skip : action.skip, limit: DEFAULT_COLLECTION_SIZE});
-    }
-
-    if(action.type === ActionsQuery.MOVE_BACK && +query.skip !== 0){
-        let skip = +query.skip === DEFAULT_COLLECTION_SIZE * 2 ? 0 : (+query.skip - DEFAULT_COLLECTION_SIZE);
-        return Object.assign({}, query, {skip,
-            limit: DEFAULT_COLLECTION_SIZE });
+        return Object.assign({}, query, {page : action.page, skip : action.skip, limit: DEFAULT_COLLECTION_SIZE});
     }
 
     return query;
