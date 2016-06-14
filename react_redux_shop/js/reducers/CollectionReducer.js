@@ -6,7 +6,12 @@ export default function CollectionReducer(collection = {}, action) {
     }
 
     if(action.type === ActionsQuery.SET_COLLECTION){
-        return Object.assign({}, collection, {pending_request: false, data: action.data, count: action.count})
+        return Object.assign({}, collection, {
+            pending_request: false,
+            data: action.data,
+            count: action.count,
+            last_update: Date.now()
+        })
     }
 
     return collection;

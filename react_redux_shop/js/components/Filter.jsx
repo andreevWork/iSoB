@@ -1,6 +1,8 @@
 import React from 'react';
 import {changeQuery} from '../actions/ActionsCreators';
 import {getNumberWithSpace, getOnlyNumber} from '../utils/StringFormat';
+import {DEFAULT_ENTER_DELAY} from "../config/config";
+import {URL} from '../config/config';
 
 export default class Filter extends React.Component {
     state = {
@@ -8,7 +10,7 @@ export default class Filter extends React.Component {
     };
 
     componentDidMount() {
-        fetch('http://localhost:3002/notebooks/filter_fields')
+        fetch(URL.filters)
             .then(res => res.json())
             .then(json => this.setState({filters: json}));
     }
@@ -24,7 +26,6 @@ export default class Filter extends React.Component {
                                 <Range key={i} {...filter} /> :
                                 <Check key={i} {...filter} />;
                         })}
-                        <button type="submit" className="btn btn-primary"><span className="glyphicon glyphicon glyphicon-search" /> Поиск</button>
                     </form>
                 </div>
             </div>
@@ -55,7 +56,8 @@ class Range extends React.Component {
 
     state = {
         min_val : this.context.store.getState().query[this.props.key_min] || '',
-        max_val : this.context.store.getState().query[this.props.key_max] || ''
+        max_val : this.context.store.getState().query[this.props.key_max] || '',
+        id_timeout : 0
     };
 
     componentDidMount() {
@@ -67,8 +69,12 @@ class Range extends React.Component {
         // Небольшая оптимизация, если значение не состоит из цифр или не изменилось, опять же в плане цифр, ничего не апдейтим.
         if((!real_val && value) || real_val === this.state[state_key]) return;
 
-        this.context.store.dispatch(changeQuery(query_key, real_val));
-        this.setState({[state_key]: real_val});
+        clearInterval(this.state.id_timeout);
+
+        this.setState({
+            [state_key]: real_val,
+            id_timeout: setTimeout(() => this.context.store.dispatch(changeQuery(query_key, real_val)), DEFAULT_ENTER_DELAY)
+        });
     }
 
     render () {
@@ -121,7 +127,7 @@ class Check extends React.Component {
         return (
             <div className="form-group">
                 <label>{text}</label>
-                <div className="checkbox">
+                <div className="checkbox checkbox--padding">
                     {values.map((value, i) => {
                         return (
                             <label key={i} >
@@ -141,4 +147,4 @@ class Check extends React.Component {
             </div>
         );
     };
-};
+}

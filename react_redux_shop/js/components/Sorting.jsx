@@ -1,6 +1,6 @@
 import React from 'react';
 import {changeSortingField} from '../actions/ActionsCreators';
-import {defaultSorting} from '../config/config';
+import {URL} from '../config/config';
 
 export default class Sorting extends React.Component {
     static contextTypes = {
@@ -9,8 +9,8 @@ export default class Sorting extends React.Component {
     
     state = {
         sort_fields: [],
-        key_sort: this.context.store.getState().sort_fields.key_sort,
-        sort_direction: this.context.store.getState().sort_fields.sort_direction
+        key_sort: this.context.store.getState().query.key_sort,
+        sort_direction: +this.context.store.getState().query.sort_direction
     };
 
     icon_mapping = {
@@ -24,7 +24,7 @@ export default class Sorting extends React.Component {
     }
 
     componentDidMount() {
-        fetch('http://localhost:3002/notebooks/sort_fields')
+        fetch(URL.sort_fields)
             .then(res => res.json())
             .then(json => this.setState({sort_fields: json}));
     }
@@ -78,7 +78,7 @@ class SortButton extends React.Component {
     render () {
         var {text, key_sort, onClick, is_active, icon, icon_sub} = this.props;
         return (
-            <button onClick={(e) => onClick(key_sort)} type="button" className={"btn btn-default btn-sm " + (is_active ? ' active ' : '')}>
+            <button onClick={(e) => onClick(key_sort)} type="button" className={"btn btn-default btn--sort btn-sm " + (is_active ? ' active ' : '')}>
                 <span className={`glyphicon ${icon}${icon_sub}`} />
                 {text}
             </button>

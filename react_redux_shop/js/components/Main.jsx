@@ -1,7 +1,7 @@
 import React from 'react';
-import Filter from './components/Filter.jsx';
-import Sorting from './components/Sorting.jsx';
-import Gallery from './components/Gallery.jsx';
+import Filter from './Filter.jsx';
+import Sorting from './Sorting.jsx';
+import Gallery from './Gallery.jsx';
 
 export default class Main extends React.Component {
 
@@ -22,9 +22,9 @@ export default class Main extends React.Component {
             <div className="container-fluid">
                 <div className="row">
                     <div className="col-lg-4 col-md-5 col-sm-12 col-xs-12">
-                        <div className="panel panel-default">
+                        <div className="panel panel-primary">
                             <div className="panel-body">
-                                Название
+                                Магазин ноутбуков
                             </div>
                         </div>
                     </div>

@@ -8115,29 +8115,21 @@
 
 	var _Main2 = _interopRequireDefault(_Main);
 
-	var _tripleQueue = __webpack_require__(473);
-
-	var _tripleQueue2 = _interopRequireDefault(_tripleQueue);
-
-	var _QueryReducer = __webpack_require__(474);
+	var _QueryReducer = __webpack_require__(476);
 
 	var _QueryReducer2 = _interopRequireDefault(_QueryReducer);
 
-	var _SortReducer = __webpack_require__(475);
-
-	var _SortReducer2 = _interopRequireDefault(_SortReducer);
-
-	var _CollectionReducer = __webpack_require__(476);
+	var _CollectionReducer = __webpack_require__(477);
 
 	var _CollectionReducer2 = _interopRequireDefault(_CollectionReducer);
 
-	var _GeneratorMiddleware = __webpack_require__(477);
+	var _GeneratorMiddleware = __webpack_require__(471);
 
 	var _GeneratorMiddleware2 = _interopRequireDefault(_GeneratorMiddleware);
 
 	var _ActionsCreators = __webpack_require__(468);
 
-	var _config = __webpack_require__(472);
+	var _config = __webpack_require__(470);
 
 	var _QueryString = __webpack_require__(478);
 
@@ -8145,9 +8137,14 @@
 
 	var _Router2 = _interopRequireDefault(_Router);
 
-	var _redux = __webpack_require__(480);
+	var _redux = __webpack_require__(481);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/*
+	 * Диаграмма цикла работы
+	 * https://www.draw.io/#LRedux_shop
+	 */
 
 	window.onload = function () {
 	    /*
@@ -8156,11 +8153,7 @@
 	    var initialState = {
 	        // Сюда могут попасть ненужные серверу свойства из строки, но нас это не парит, сервер сам отметает не нужные поля,
 	        // нет надобности рулить это на клиенте.
-	        query: (0, _QueryString.getQueryStringFromRequest)(),
-	        sort_fields: {
-	            key_sort: (0, _QueryString.getQueryStringFromRequest)().key_sort || _config.defaultSorting.key_sort,
-	            sort_direction: +(0, _QueryString.getQueryStringFromRequest)().sort_direction || _config.defaultSorting.sort_direction
-	        }
+	        query: Object.assign({}, { key_sort: _config.DEFAULT_SORTING.key_sort, sort_direction: _config.DEFAULT_SORTING.sort_direction }, (0, _QueryString.getQueryObjectFromRequest)(), _config.DEFAULT_SIZE_OBJECT)
 	    };
 
 	    /*
@@ -8168,8 +8161,7 @@
 	     */
 	    var store = (0, _redux.createStore)((0, _redux.combineReducers)({
 	        query: _QueryReducer2.default,
-	        collection: _CollectionReducer2.default,
-	        sort_fields: _SortReducer2.default
+	        collection: _CollectionReducer2.default
 	    }), initialState, (0, _redux.applyMiddleware)(_GeneratorMiddleware2.default));
 
 	    /*
@@ -8181,9 +8173,8 @@
 	     * Подписываем на хранилище и при изменениях изменяем роутер
 	     */
 	    store.subscribe(function () {
-	        if (!router.isEqual(store.getState().query, store.getState().sort_fields)) {
-	            router.set(store.getState().query, store.getState().sort_fields);
-	            store.dispatch((0, _GeneratorMiddleware.createActionGenerator)((0, _ActionsCreators.startRequest)(), (0, _ActionsCreators.sendRequest)(router.get())));
+	        if (!router.isEqual(store.getState().query)) {
+	            init();
 	        }
 	    });
 
@@ -8192,7 +8183,13 @@
 	     */
 	    _reactDom2.default.render(_react2.default.createElement(_Main2.default, { store: store }), document.getElementById('conteiner'));
 
-	    store.dispatch((0, _GeneratorMiddleware.createActionGenerator)((0, _ActionsCreators.startRequest)(), (0, _ActionsCreators.sendRequest)(router.get())));
+	    init();
+
+	    function init() {
+	        router.set(store.getState().query);
+
+	        store.dispatch((0, _ActionsCreators.sendCollectionRequest)(router.get()));
+	    }
 	};
 
 /***/ },
@@ -28388,11 +28385,11 @@
 
 	var _Filter2 = _interopRequireDefault(_Filter);
 
-	var _Sorting = __webpack_require__(471);
+	var _Sorting = __webpack_require__(473);
 
 	var _Sorting2 = _interopRequireDefault(_Sorting);
 
-	var _Gallery = __webpack_require__(494);
+	var _Gallery = __webpack_require__(474);
 
 	var _Gallery2 = _interopRequireDefault(_Gallery);
 
@@ -28432,11 +28429,11 @@
 	                        { className: 'col-lg-4 col-md-5 col-sm-12 col-xs-12' },
 	                        _react2.default.createElement(
 	                            'div',
-	                            { className: 'panel panel-default' },
+	                            { className: 'panel panel-primary' },
 	                            _react2.default.createElement(
 	                                'div',
 	                                { className: 'panel-body' },
-	                                'Название'
+	                                'Магазин ноутбуков'
 	                            )
 	                        )
 	                    )
@@ -28487,7 +28484,9 @@
 
 	var _ActionsCreators = __webpack_require__(468);
 
-	var _StringFormat = __webpack_require__(470);
+	var _StringFormat = __webpack_require__(472);
+
+	var _config = __webpack_require__(470);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28523,7 +28522,7 @@
 	        value: function componentDidMount() {
 	            var _this2 = this;
 
-	            fetch('http://localhost:3002/notebooks/filter_fields').then(function (res) {
+	            fetch(_config.URL.filters).then(function (res) {
 	                return res.json();
 	            }).then(function (json) {
 	                return _this2.setState({ filters: json });
@@ -28546,13 +28545,7 @@
 	                            { role: 'form' },
 	                            this.state.filters.map(function (filter, i) {
 	                                return filter.type == 'range' ? _react2.default.createElement(Range, _extends({ key: i }, filter)) : _react2.default.createElement(Check, _extends({ key: i }, filter));
-	                            }),
-	                            _react2.default.createElement(
-	                                'button',
-	                                { type: 'submit', className: 'btn btn-primary' },
-	                                _react2.default.createElement('span', { className: 'glyphicon glyphicon glyphicon-search' }),
-	                                ' Поиск'
-	                            )
+	                            })
 	                        )
 	                    )
 	                )
@@ -28561,7 +28554,6 @@
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            console.log(this.state.filters);
 	            return this.state && this.state.filters.length > 0 ? this.renderFilter() : _react2.default.createElement(
 	                'span',
 	                null,
@@ -28591,7 +28583,8 @@
 
 	        return _ret2 = (_temp2 = (_this3 = _possibleConstructorReturn(this, (_Object$getPrototypeO2 = Object.getPrototypeOf(Range)).call.apply(_Object$getPrototypeO2, [this].concat(args))), _this3), _this3.state = {
 	            min_val: _this3.context.store.getState().query[_this3.props.key_min] || '',
-	            max_val: _this3.context.store.getState().query[_this3.props.key_max] || ''
+	            max_val: _this3.context.store.getState().query[_this3.props.key_max] || '',
+	            id_timeout: 0
 	        }, _temp2), _possibleConstructorReturn(_this3, _ret2);
 	    }
 
@@ -28601,18 +28594,24 @@
 	    }, {
 	        key: 'onChange',
 	        value: function onChange(value, query_key, state_key) {
+	            var _this4 = this,
+	                _setState;
+
 	            var real_val = (0, _StringFormat.getOnlyNumber)(value);
 
 	            // Небольшая оптимизация, если значение не состоит из цифр или не изменилось, опять же в плане цифр, ничего не апдейтим.
 	            if (!real_val && value || real_val === this.state[state_key]) return;
 
-	            this.context.store.dispatch((0, _ActionsCreators.changeQuery)(query_key, real_val));
-	            this.setState(_defineProperty({}, state_key, real_val));
+	            clearInterval(this.state.id_timeout);
+
+	            this.setState((_setState = {}, _defineProperty(_setState, state_key, real_val), _defineProperty(_setState, 'id_timeout', setTimeout(function () {
+	                return _this4.context.store.dispatch((0, _ActionsCreators.changeQuery)(query_key, real_val));
+	            }, _config.DEFAULT_ENTER_DELAY)), _setState));
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this4 = this;
+	            var _this5 = this;
 
 	            var _props = this.props;
 	            var text = _props.text;
@@ -28640,7 +28639,7 @@
 	                    ),
 	                    _react2.default.createElement('input', {
 	                        onChange: function onChange(e) {
-	                            return _this4.onChange(e.target.value, key_min, 'min_val');
+	                            return _this5.onChange(e.target.value, key_min, 'min_val');
 	                        },
 	                        className: 'form-control',
 	                        placeholder: min, value: (0, _StringFormat.getNumberWithSpace)(this.state.min_val) }),
@@ -28651,7 +28650,7 @@
 	                    ),
 	                    _react2.default.createElement('input', {
 	                        onChange: function onChange(e) {
-	                            return _this4.onChange(e.target.value, key_max, 'max_val');
+	                            return _this5.onChange(e.target.value, key_max, 'max_val');
 	                        },
 	                        className: 'form-control',
 	                        placeholder: max,
@@ -28697,7 +28696,7 @@
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this6 = this;
+	            var _this7 = this;
 
 	            var _props2 = this.props;
 	            var text = _props2.text;
@@ -28714,15 +28713,15 @@
 	                ),
 	                _react2.default.createElement(
 	                    'div',
-	                    { className: 'checkbox' },
+	                    { className: 'checkbox checkbox--padding' },
 	                    values.map(function (value, i) {
 	                        return _react2.default.createElement(
 	                            'label',
 	                            { key: i },
 	                            _react2.default.createElement('input', {
-	                                defaultChecked: !!(_this6.context.store.getState().query[query_key] && ~_this6.context.store.getState().query[query_key].indexOf(value)),
+	                                defaultChecked: !!(_this7.context.store.getState().query[query_key] && ~_this7.context.store.getState().query[query_key].indexOf(value)),
 	                                onChange: function onChange(e) {
-	                                    return _this6.onChange(e, query_key);
+	                                    return _this7.onChange(e, query_key);
 	                                },
 	                                type: 'checkbox',
 	                                value: value }),
@@ -28746,7 +28745,6 @@
 	    query_key: _react2.default.PropTypes.string.isRequired,
 	    values: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.oneOfType([_react2.default.PropTypes.string, _react2.default.PropTypes.number])).isRequired
 	};
-	;
 
 /***/ },
 /* 468 */
@@ -28758,13 +28756,17 @@
 	    value: true
 	});
 	exports.changeQuery = changeQuery;
+	exports.changeSkip = changeSkip;
 	exports.changeSortingField = changeSortingField;
-	exports.startRequest = startRequest;
-	exports.sendRequest = sendRequest;
+	exports.sendCollectionRequest = sendCollectionRequest;
 
 	var _ActionsTypes = __webpack_require__(469);
 
 	var _ActionsTypes2 = _interopRequireDefault(_ActionsTypes);
+
+	var _config = __webpack_require__(470);
+
+	var _GeneratorMiddleware = __webpack_require__(471);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28776,12 +28778,23 @@
 	    };
 	}
 
+	function changeSkip(skip) {
+	    return {
+	        type: _ActionsTypes2.default.MOVE,
+	        skip: skip
+	    };
+	}
+
 	function changeSortingField(key_sort, sort_direction) {
 	    return {
 	        type: _ActionsTypes2.default.CHANGE_SORTING_FIELD,
 	        key_sort: key_sort,
 	        sort_direction: sort_direction
 	    };
+	}
+
+	function sendCollectionRequest(request) {
+	    return (0, _GeneratorMiddleware.createActionGenerator)(startRequest(), sendRequest(request));
 	}
 
 	function startRequest() {
@@ -28791,7 +28804,7 @@
 	}
 
 	function sendRequest(query) {
-	    return fetch('http://localhost:3002/notebooks?' + query).then(function (res) {
+	    return fetch(_config.URL.base + '?' + query).then(function (res) {
 	        return res.json();
 	    }).then(function (json) {
 	        return {
@@ -28819,10 +28832,18 @@
 	};
 
 	ActionsTypes.CHANGE_QUERY = 'change_query';
+	ActionsTypes.MOVE = 'move';
 	ActionsTypes.CHANGE_SORTING_FIELD = 'change_sorting_field';
 	ActionsTypes.START_REQUEST = 'start_request';
 	ActionsTypes.SET_COLLECTION = 'set_collection';
 	exports.default = ActionsTypes;
+
+	var QueueActionsTypes = exports.QueueActionsTypes = function QueueActionsTypes() {
+	    _classCallCheck(this, QueueActionsTypes);
+	};
+
+	QueueActionsTypes.FORWARD = 'forward';
+	QueueActionsTypes.BACK = 'back';
 
 /***/ },
 /* 470 */
@@ -28831,338 +28852,48 @@
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-	    value: true
+	  value: true
 	});
-	exports.getNumberWithSpace = getNumberWithSpace;
-	exports.getOnlyNumber = getOnlyNumber;
-	function getNumberWithSpace(str) {
-	    return str ? str.replace(/(?!^)(?=(\d{3})+$)/g, ' ') : '';
-	}
 
-	function getOnlyNumber(str) {
-	    return str ? str.replace(/[\D]/g, '') : '';
-	}
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var DEFAULT_SORTING = exports.DEFAULT_SORTING = function DEFAULT_SORTING() {
+	  _classCallCheck(this, DEFAULT_SORTING);
+	};
+
+	DEFAULT_SORTING.key_sort = 'rating';
+	DEFAULT_SORTING.sort_direction = -1;
+	var BASE_URL = exports.BASE_URL = 'http://localhost:3002/notebooks';
+
+	var URL = exports.URL = function URL() {
+	  _classCallCheck(this, URL);
+	};
+
+	/*
+	 * Дефолтное количество элементов на странице
+	 */
+
+
+	URL.base = BASE_URL;
+	URL.filters = BASE_URL + '/filter_fields';
+	URL.sort_fields = BASE_URL + '/sort_fields';
+	var DEFAULT_COLLECTION_SIZE = exports.DEFAULT_COLLECTION_SIZE = 15;
+
+	/*
+	 * Объект для мержа в объект запроса, изначальные значение для размера запрашиваемых данных
+	 */
+	var DEFAULT_SIZE_OBJECT = exports.DEFAULT_SIZE_OBJECT = {
+	  skip: 0,
+	  limit: DEFAULT_COLLECTION_SIZE * 2
+	};
+
+	/*
+	 * Дефолтное значение задержки отправки данных при вводе
+	 */
+	var DEFAULT_ENTER_DELAY = exports.DEFAULT_ENTER_DELAY = 1000;
 
 /***/ },
 /* 471 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(300);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _ActionsCreators = __webpack_require__(468);
-
-	var _config = __webpack_require__(472);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Sorting = function (_React$Component) {
-	    _inherits(Sorting, _React$Component);
-
-	    function Sorting() {
-	        var _Object$getPrototypeO;
-
-	        var _temp, _this, _ret;
-
-	        _classCallCheck(this, Sorting);
-
-	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	            args[_key] = arguments[_key];
-	        }
-
-	        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(Sorting)).call.apply(_Object$getPrototypeO, [this].concat(args))), _this), _this.state = {
-	            sort_fields: [],
-	            key_sort: _this.context.store.getState().sort_fields.key_sort,
-	            sort_direction: _this.context.store.getState().sort_fields.sort_direction
-	        }, _this.icon_mapping = {
-	            name: 'glyphicon-sort-by-alphabet'
-	        }, _this.default_icon = 'glyphicon-sort-by-attributes', _temp), _possibleConstructorReturn(_this, _ret);
-	    }
-
-	    _createClass(Sorting, [{
-	        key: 'getClassForButton',
-	        value: function getClassForButton(key_sort) {
-	            return this.icon_mapping[key_sort] || this.default_icon;
-	        }
-	    }, {
-	        key: 'componentDidMount',
-	        value: function componentDidMount() {
-	            var _this2 = this;
-
-	            fetch('http://localhost:3002/notebooks/sort_fields').then(function (res) {
-	                return res.json();
-	            }).then(function (json) {
-	                return _this2.setState({ sort_fields: json });
-	            });
-	        }
-	    }, {
-	        key: 'onClick',
-	        value: function onClick(key_sort) {
-	            var _this3 = this;
-
-	            this.setState({
-	                sort_direction: key_sort === this.state.key_sort ? -this.state.sort_direction : -1,
-	                key_sort: key_sort
-	            }, function () {
-	                _this3.context.store.dispatch((0, _ActionsCreators.changeSortingField)(_this3.state.key_sort, _this3.state.sort_direction));
-	            });
-	        }
-	    }, {
-	        key: 'renderSortFields',
-	        value: function renderSortFields() {
-	            var _this4 = this;
-
-	            var is_active;
-	            return _react2.default.createElement(
-	                'div',
-	                { className: 'panel panel-default' },
-	                _react2.default.createElement(
-	                    'div',
-	                    { className: 'panel-body' },
-	                    this.state.sort_fields.map(function (field, i) {
-	                        is_active = _this4.state.key_sort === field.key_sort;
-	                        return _react2.default.createElement(SortButton, _extends({}, field, {
-	                            key: i,
-	                            is_active: is_active,
-	                            icon: _this4.getClassForButton(field.key_sort),
-	                            icon_sub: _this4.state.sort_direction === 1 && is_active ? '' : '-alt',
-	                            onClick: _this4.onClick.bind(_this4) }));
-	                    })
-	                )
-	            );
-	        }
-	    }, {
-	        key: 'render',
-	        value: function render() {
-	            var render_element = this.state && this.state.sort_fields.length > 0 ? this.renderSortFields() : _react2.default.createElement(
-	                'span',
-	                null,
-	                'loader'
-	            );
-
-	            return render_element;
-	        }
-	    }]);
-
-	    return Sorting;
-	}(_react2.default.Component);
-
-	Sorting.contextTypes = {
-	    store: _react2.default.PropTypes.object
-	};
-	exports.default = Sorting;
-
-	var SortButton = function (_React$Component2) {
-	    _inherits(SortButton, _React$Component2);
-
-	    function SortButton() {
-	        _classCallCheck(this, SortButton);
-
-	        return _possibleConstructorReturn(this, Object.getPrototypeOf(SortButton).apply(this, arguments));
-	    }
-
-	    _createClass(SortButton, [{
-	        key: 'render',
-	        value: function render() {
-	            var _props = this.props;
-	            var text = _props.text;
-	            var key_sort = _props.key_sort;
-	            var _onClick = _props.onClick;
-	            var is_active = _props.is_active;
-	            var icon = _props.icon;
-	            var icon_sub = _props.icon_sub;
-
-	            return _react2.default.createElement(
-	                'button',
-	                { onClick: function onClick(e) {
-	                        return _onClick(key_sort);
-	                    }, type: 'button', className: "btn btn-default btn-sm " + (is_active ? ' active ' : '') },
-	                _react2.default.createElement('span', { className: 'glyphicon ' + icon + icon_sub }),
-	                text
-	            );
-	        }
-	    }]);
-
-	    return SortButton;
-	}(_react2.default.Component);
-
-	SortButton.propTypes = {
-	    text: _react2.default.PropTypes.string.isRequired,
-	    key_sort: _react2.default.PropTypes.string.isRequired,
-	    onClick: _react2.default.PropTypes.func.isRequired,
-	    is_active: _react2.default.PropTypes.bool.isRequired,
-	    icon: _react2.default.PropTypes.string.isRequired,
-	    icon_sub: _react2.default.PropTypes.string.isRequired
-	};
-	;
-
-/***/ },
-/* 472 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var defaultSorting = exports.defaultSorting = function defaultSorting() {
-	    _classCallCheck(this, defaultSorting);
-	};
-
-	defaultSorting.key_sort = 'rating';
-	defaultSorting.sort_direction = -1;
-
-/***/ },
-/* 473 */
-/***/ function(module, exports) {
-
-	module.exports=function(t){function e(u){if(i[u])return i[u].exports;var r=i[u]={exports:{},id:u,loaded:!1};return t[u].call(r.exports,r,r.exports,e),r.loaded=!0,r.exports}var i={};return e.m=t,e.c=i,e.p="",e(0)}([function(t,e){"use strict";var i=function(){function t(){this.range={from:1,to:null},this.queue={prev:[],actual:[],next:[]}}return t.prototype.setSize=function(t){this.size=t},t.prototype.getSize=function(){return this.size},t.prototype.setCount=function(t){this.count=t},t.prototype.getCount=function(){return this.count},t.prototype.getActual=function(){return this.queue.actual},t.prototype.getPrev=function(){return this.queue.prev},t.prototype.getNext=function(){return this.queue.next},t.prototype.getAvailability=function(){return this.isEnd()?0:this.count-(this.range.to+this.getNext().length)},t.prototype.isEnd=function(){return this.range.to+this.getNext().length>=this.count},t.prototype.isStart=function(){return this.range.from-this.getPrev().length===1},t.prototype.moveForward=function(){if(!this.queue.next)return null;var t=this.queue.prev;return this.shiftQueue(),t},t.prototype.moveBack=function(){if(!this.queue.prev)return null;var t=this.queue.next;return this.shiftQueue([],!0),t},t.prototype.setPrevPiece=function(t){if(this.pieceIsValid(t),this.isStart())throw Error("queue already in position start");this.isEmpty(this.queue.prev)&&(this.queue.prev=t)},t.prototype.setPiece=function(t){this.pieceIsValid(t),this.isEmpty(this.queue.actual)?(this.queue.actual=t,this.setRange(t.length)):this.isEmpty(this.queue.next)?this.queue.next=t:this.shiftQueue(t)},t.prototype.getActualRange=function(){return this.range},t.prototype.setActualRange=function(t){this.range=t},t.prototype.pieceIsValid=function(t){if(!this.size||this.size<=0)throw Error("don`t exist size. Please set size for your queue.");if(this.isEmpty(t))throw Error("empty piece. Please get not empty data piece.");if(t.length>this.size)throw Error("length your piece more than size queue.")},t.prototype.shiftQueue=function(t,e){if(void 0===t&&(t=[]),void 0===e&&(e=!1),e){var i=this.queue.prev,u=this.queue.actual;this.queue.prev=t,this.queue.actual=i,this.queue.next=u,this.setRange(u.length,!0,i.length)}else{var i=this.queue.next,r=this.queue.actual;this.queue.prev=r,this.queue.actual=i,this.queue.next=t,this.setRange(i.length)}},t.prototype.setRange=function(t,e,i){void 0===e&&(e=!1),this.range.to?e?(this.range.to-=t,this.range.from-=i):(this.range.from=this.range.to+1,this.range.to+=t):this.range.to=t},t.prototype.isEmpty=function(t){return t?!t.length:!0},t}();Object.defineProperty(e,"__esModule",{value:!0}),e["default"]=i}]);
-
-/***/ },
-/* 474 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-	exports.default = QueryReducer;
-
-	var _ActionsTypes = __webpack_require__(469);
-
-	var _ActionsTypes2 = _interopRequireDefault(_ActionsTypes);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-	function QueryReducer() {
-	    var query = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-	    var action = arguments[1];
-
-	    if (action.type === _ActionsTypes2.default.CHANGE_QUERY) {
-	        var key = action.key;
-	        var value = action.value;
-	        var new_value = value;
-	        //Есди значение - это массив, тогда это фильтр типа check, обрабатываем по своему
-	        if (value instanceof Array) {
-	            var query_array = query[key] || [];
-	            var _value = value;
-
-	            var _value2 = _slicedToArray(_value, 1);
-
-	            value = _value2[0];
-
-
-	            if (~query_array.indexOf(value)) {
-	                query_array.splice(query_array.indexOf(value), 1);
-	                query_array = [].concat(_toConsumableArray(query_array));
-	            } else {
-	                query_array = [].concat(_toConsumableArray(query_array), [value]);
-	            }
-
-	            new_value = query_array;
-	        }
-
-	        delete query[key];
-
-	        return new_value ? Object.assign({}, query, _defineProperty({}, key, new_value)) : Object.assign({}, query);
-	    }
-
-	    return query;
-	}
-
-/***/ },
-/* 475 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	exports.default = SortReducer;
-
-	var _ActionsTypes = __webpack_require__(469);
-
-	var _ActionsTypes2 = _interopRequireDefault(_ActionsTypes);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function SortReducer() {
-	    var sort_fields = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-	    var action = arguments[1];
-
-	    if (action.type === _ActionsTypes2.default.CHANGE_SORTING_FIELD) {
-	        return {
-	            key_sort: action.key_sort,
-	            sort_direction: action.sort_direction
-	        };
-	    }
-
-	    return sort_fields;
-	}
-
-/***/ },
-/* 476 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	exports.default = CollectionReducer;
-
-	var _ActionsTypes = __webpack_require__(469);
-
-	var _ActionsTypes2 = _interopRequireDefault(_ActionsTypes);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function CollectionReducer() {
-	    var collection = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-	    var action = arguments[1];
-
-	    if (action.type === _ActionsTypes2.default.START_REQUEST) {
-	        return Object.assign({}, collection, { pending_request: true });
-	    }
-
-	    if (action.type === _ActionsTypes2.default.SET_COLLECTION) {
-	        return Object.assign({}, collection, { pending_request: false, data: action.data, count: action.count });
-	    }
-
-	    return collection;
-	}
-
-/***/ },
-/* 477 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -29252,6 +28983,651 @@
 	}
 
 /***/ },
+/* 472 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.getNumberWithSpace = getNumberWithSpace;
+	exports.getOnlyNumber = getOnlyNumber;
+	function getNumberWithSpace(str) {
+	    return str ? str.replace(/(?!^)(?=(\d{3})+$)/g, ' ') : '';
+	}
+
+	function getOnlyNumber(str) {
+	    return str ? str.replace(/[\D]/g, '') : '';
+	}
+
+/***/ },
+/* 473 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(300);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _ActionsCreators = __webpack_require__(468);
+
+	var _config = __webpack_require__(470);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Sorting = function (_React$Component) {
+	    _inherits(Sorting, _React$Component);
+
+	    function Sorting() {
+	        var _Object$getPrototypeO;
+
+	        var _temp, _this, _ret;
+
+	        _classCallCheck(this, Sorting);
+
+	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	            args[_key] = arguments[_key];
+	        }
+
+	        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(Sorting)).call.apply(_Object$getPrototypeO, [this].concat(args))), _this), _this.state = {
+	            sort_fields: [],
+	            key_sort: _this.context.store.getState().query.key_sort,
+	            sort_direction: +_this.context.store.getState().query.sort_direction
+	        }, _this.icon_mapping = {
+	            name: 'glyphicon-sort-by-alphabet'
+	        }, _this.default_icon = 'glyphicon-sort-by-attributes', _temp), _possibleConstructorReturn(_this, _ret);
+	    }
+
+	    _createClass(Sorting, [{
+	        key: 'getClassForButton',
+	        value: function getClassForButton(key_sort) {
+	            return this.icon_mapping[key_sort] || this.default_icon;
+	        }
+	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            var _this2 = this;
+
+	            fetch(_config.URL.sort_fields).then(function (res) {
+	                return res.json();
+	            }).then(function (json) {
+	                return _this2.setState({ sort_fields: json });
+	            });
+	        }
+	    }, {
+	        key: 'onClick',
+	        value: function onClick(key_sort) {
+	            var _this3 = this;
+
+	            this.setState({
+	                sort_direction: key_sort === this.state.key_sort ? -this.state.sort_direction : -1,
+	                key_sort: key_sort
+	            }, function () {
+	                _this3.context.store.dispatch((0, _ActionsCreators.changeSortingField)(_this3.state.key_sort, _this3.state.sort_direction));
+	            });
+	        }
+	    }, {
+	        key: 'renderSortFields',
+	        value: function renderSortFields() {
+	            var _this4 = this;
+
+	            var is_active;
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'panel panel-default' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'panel-body' },
+	                    this.state.sort_fields.map(function (field, i) {
+	                        is_active = _this4.state.key_sort === field.key_sort;
+	                        return _react2.default.createElement(SortButton, _extends({}, field, {
+	                            key: i,
+	                            is_active: is_active,
+	                            icon: _this4.getClassForButton(field.key_sort),
+	                            icon_sub: _this4.state.sort_direction === 1 && is_active ? '' : '-alt',
+	                            onClick: _this4.onClick.bind(_this4) }));
+	                    })
+	                )
+	            );
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var render_element = this.state && this.state.sort_fields.length > 0 ? this.renderSortFields() : _react2.default.createElement(
+	                'span',
+	                null,
+	                'loader'
+	            );
+
+	            return render_element;
+	        }
+	    }]);
+
+	    return Sorting;
+	}(_react2.default.Component);
+
+	Sorting.contextTypes = {
+	    store: _react2.default.PropTypes.object
+	};
+	exports.default = Sorting;
+
+	var SortButton = function (_React$Component2) {
+	    _inherits(SortButton, _React$Component2);
+
+	    function SortButton() {
+	        _classCallCheck(this, SortButton);
+
+	        return _possibleConstructorReturn(this, Object.getPrototypeOf(SortButton).apply(this, arguments));
+	    }
+
+	    _createClass(SortButton, [{
+	        key: 'render',
+	        value: function render() {
+	            var _props = this.props;
+	            var text = _props.text;
+	            var key_sort = _props.key_sort;
+	            var _onClick = _props.onClick;
+	            var is_active = _props.is_active;
+	            var icon = _props.icon;
+	            var icon_sub = _props.icon_sub;
+
+	            return _react2.default.createElement(
+	                'button',
+	                { onClick: function onClick(e) {
+	                        return _onClick(key_sort);
+	                    }, type: 'button', className: "btn btn-default btn--sort btn-sm " + (is_active ? ' active ' : '') },
+	                _react2.default.createElement('span', { className: 'glyphicon ' + icon + icon_sub }),
+	                text
+	            );
+	        }
+	    }]);
+
+	    return SortButton;
+	}(_react2.default.Component);
+
+	SortButton.propTypes = {
+	    text: _react2.default.PropTypes.string.isRequired,
+	    key_sort: _react2.default.PropTypes.string.isRequired,
+	    onClick: _react2.default.PropTypes.func.isRequired,
+	    is_active: _react2.default.PropTypes.bool.isRequired,
+	    icon: _react2.default.PropTypes.string.isRequired,
+	    icon_sub: _react2.default.PropTypes.string.isRequired
+	};
+	;
+
+/***/ },
+/* 474 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(300);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _tripleQueue = __webpack_require__(475);
+
+	var _tripleQueue2 = _interopRequireDefault(_tripleQueue);
+
+	var _StringFormat = __webpack_require__(472);
+
+	var _config = __webpack_require__(470);
+
+	var _ActionsCreators = __webpack_require__(468);
+
+	var _ActionsTypes = __webpack_require__(469);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Gallery = function (_React$Component) {
+	    _inherits(Gallery, _React$Component);
+
+	    function Gallery() {
+	        var _Object$getPrototypeO;
+
+	        var _temp, _this, _ret;
+
+	        _classCallCheck(this, Gallery);
+
+	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	            args[_key] = arguments[_key];
+	        }
+
+	        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(Gallery)).call.apply(_Object$getPrototypeO, [this].concat(args))), _this), _this.state = {
+	            data: [],
+	            last_update: Date.now(),
+	            queue_action: null
+	        }, _temp), _possibleConstructorReturn(_this, _ret);
+	    }
+
+	    _createClass(Gallery, [{
+	        key: 'initQueue',
+	        value: function initQueue() {
+	            this.queue = new _tripleQueue2.default();
+	            this.queue.setSize(_config.DEFAULT_COLLECTION_SIZE);
+	        }
+	    }, {
+	        key: 'changeState',
+	        value: function changeState() {
+	            var queue_action = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+
+	            this.setState({
+	                queue_action: queue_action,
+	                data: this.queue.getActual(),
+	                from: this.queue.getActualRange().from,
+	                to: this.queue.getActualRange().to,
+	                count: this.queue.getCount(),
+	                has_next: !!this.queue.getNext().length,
+	                has_prev: !!this.queue.getPrev().length,
+	                last_update: Date.now()
+	            });
+	        }
+	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            var _this2 = this;
+
+	            this.context.store.subscribe(function () {
+	                var _context$store$getSta = _this2.context.store.getState().collection;
+
+	                var count = _context$store$getSta.count;
+	                var data = _context$store$getSta.data;
+	                var last_update = _context$store$getSta.last_update;
+
+
+	                if (_this2.state.last_update < last_update) {
+
+	                    switch (_this2.state.queue_action) {
+	                        case _ActionsTypes.QueueActionsTypes.FORWARD:
+	                            _this2.queue.setPiece(data);
+	                            break;
+
+	                        case _ActionsTypes.QueueActionsTypes.BACK:
+	                            _this2.queue.setPrevPiece(data);
+	                            break;
+
+	                        default:
+	                            _this2.initQueue();
+	                            _this2.queue.setCount(count);
+	                            data.length && _this2.queue.setPiece(data.splice(0, _config.DEFAULT_COLLECTION_SIZE));
+	                            data.length && _this2.queue.setPiece(data);
+	                            break;
+	                    }
+
+	                    _this2.changeState();
+	                }
+	            });
+	        }
+	    }, {
+	        key: 'goForward',
+	        value: function goForward() {
+	            this.queue.moveForward();
+
+	            if (!this.queue.isEnd()) {
+	                this.changeState(_ActionsTypes.QueueActionsTypes.FORWARD);
+	                this.context.store.dispatch((0, _ActionsCreators.changeSkip)(this.queue.getActualRange().to));
+	            } else {
+	                // Если дошли до конца очереди, грузить уже нечего, просто обновляем состояние
+	                this.changeState();
+	            }
+	        }
+	    }, {
+	        key: 'goBack',
+	        value: function goBack() {
+	            this.queue.moveBack();
+
+	            if (!this.queue.isStart()) {
+	                // Если не дошли до начала просто двигаем указатель в очереди назад
+	                this.changeState(_ActionsTypes.QueueActionsTypes.BACK);
+
+	                var skip = this.queue.getActualRange().to - _config.DEFAULT_COLLECTION_SIZE * 2;
+	                skip = skip > 0 ? skip : 0;
+	                this.context.store.dispatch((0, _ActionsCreators.changeSkip)(skip));
+	            } else {
+	                // Если дошли в начало ничего грузить не нужно, просто обновить состояние компонента
+	                this.changeState();
+	            }
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'row' },
+	                this.state.data.length ? this.renderCollection() : null
+	            );
+	        }
+	    }, {
+	        key: 'renderCollection',
+	        value: function renderCollection() {
+	            return _react2.default.createElement(
+	                'div',
+	                null,
+	                this.renderNavigator(),
+	                this.state.data.map(function (item, i) {
+	                    return _react2.default.createElement(GalleryItem, _extends({ key: i }, item));
+	                }),
+	                +this.state.to - +this.state.from > _config.DEFAULT_COLLECTION_SIZE / 2 ? this.renderNavigator() : null
+	            );
+	        }
+	    }, {
+	        key: 'renderNavigator',
+	        value: function renderNavigator() {
+	            var _this3 = this;
+
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'col-lg-12 col-xs-12' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'well well-lg' },
+	                    'Показано ' + this.state.from + ' - ' + this.state.to + ' из ' + this.state.count,
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'btn-group pull-right' },
+	                        this.state.has_prev && _react2.default.createElement(
+	                            'button',
+	                            { onClick: function onClick() {
+	                                    return _this3.goBack();
+	                                }, type: 'button', className: 'btn btn-primary btn-xs' },
+	                            'Назад'
+	                        ),
+	                        this.state.has_next && _react2.default.createElement(
+	                            'button',
+	                            { type: 'button', onClick: function onClick() {
+	                                    return _this3.goForward();
+	                                }, className: 'btn btn-primary btn-xs' },
+	                            'Далее'
+	                        )
+	                    )
+	                )
+	            );
+	        }
+	    }]);
+
+	    return Gallery;
+	}(_react2.default.Component);
+
+	Gallery.contextTypes = {
+	    store: _react2.default.PropTypes.object
+	};
+	exports.default = Gallery;
+
+
+	var GalleryItem = function GalleryItem(_ref) {
+	    var name = _ref.name;
+	    var rating = _ref.rating;
+	    var price = _ref.price;
+	    var ORM = _ref.ORM;
+	    var MORM = _ref.MORM;
+	    var material = _ref.material;
+	    var processor = _ref.processor;
+	    var video_memory = _ref.video_memory;
+	    var screen_size = _ref.screen_size;
+
+	    return _react2.default.createElement(
+	        'div',
+	        { className: 'col-lg-6 col-md-12 col-sm-6 col-xs-12' },
+	        _react2.default.createElement(
+	            'div',
+	            { className: 'panel panel-default' },
+	            _react2.default.createElement(
+	                'div',
+	                { className: 'panel-body' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'pull-right' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        null,
+	                        rating,
+	                        '  ',
+	                        _react2.default.createElement('span', { className: 'glyphicon glyphicon-star' })
+	                    ),
+	                    _react2.default.createElement(
+	                        'div',
+	                        null,
+	                        screen_size,
+	                        ' ',
+	                        _react2.default.createElement('span', { className: 'glyphicon glyphicon-resize-full' })
+	                    )
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'text-center' },
+	                    _react2.default.createElement('img', { src: '/public/1.png', width: '310', className: 'img-rounded' }),
+	                    _react2.default.createElement(
+	                        'h4',
+	                        null,
+	                        name
+	                    )
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'caption' },
+	                    _react2.default.createElement(
+	                        'ul',
+	                        { className: 'list-group' },
+	                        _react2.default.createElement(
+	                            'li',
+	                            { className: 'list-group-item' },
+	                            'Цена:',
+	                            _react2.default.createElement(
+	                                'span',
+	                                { className: 'badge' },
+	                                (0, _StringFormat.getNumberWithSpace)(price + ''),
+	                                ' руб'
+	                            )
+	                        ),
+	                        _react2.default.createElement(
+	                            'li',
+	                            { className: 'list-group-item' },
+	                            'ORM (max ORM):',
+	                            _react2.default.createElement(
+	                                'span',
+	                                { className: 'badge' },
+	                                ORM,
+	                                ' (',
+	                                MORM,
+	                                ') GB'
+	                            )
+	                        ),
+	                        _react2.default.createElement(
+	                            'li',
+	                            { className: 'list-group-item' },
+	                            'Процессор:',
+	                            _react2.default.createElement(
+	                                'span',
+	                                { className: 'badge' },
+	                                processor
+	                            )
+	                        ),
+	                        _react2.default.createElement(
+	                            'li',
+	                            { className: 'list-group-item' },
+	                            'Видео память:',
+	                            _react2.default.createElement(
+	                                'span',
+	                                { className: 'badge' },
+	                                video_memory
+	                            )
+	                        ),
+	                        _react2.default.createElement(
+	                            'li',
+	                            { className: 'list-group-item' },
+	                            'Материал:',
+	                            _react2.default.createElement(
+	                                'span',
+	                                { className: 'badge' },
+	                                material.join(', ')
+	                            )
+	                        )
+	                    )
+	                )
+	            )
+	        )
+	    );
+	};
+
+/***/ },
+/* 475 */
+/***/ function(module, exports) {
+
+	module.exports=function(t){function e(u){if(i[u])return i[u].exports;var r=i[u]={exports:{},id:u,loaded:!1};return t[u].call(r.exports,r,r.exports,e),r.loaded=!0,r.exports}var i={};return e.m=t,e.c=i,e.p="",e(0)}([function(t,e){"use strict";var i=function(){function t(){this.range={from:1,to:null},this.queue={prev:[],actual:[],next:[]}}return t.prototype.setSize=function(t){this.size=t},t.prototype.getSize=function(){return this.size},t.prototype.setCount=function(t){this.count=t},t.prototype.getCount=function(){return this.count},t.prototype.getActual=function(){return this.queue.actual},t.prototype.getPrev=function(){return this.queue.prev},t.prototype.getNext=function(){return this.queue.next},t.prototype.getAvailability=function(){return this.isEnd()?0:this.count-(this.range.to+this.getNext().length)},t.prototype.isEnd=function(){return this.range.to+this.getNext().length>=this.count},t.prototype.isStart=function(){return this.range.from-this.getPrev().length===1},t.prototype.moveForward=function(){if(!this.queue.next)return null;var t=this.queue.prev;return this.shiftQueue(),t},t.prototype.moveBack=function(){if(!this.queue.prev)return null;var t=this.queue.next;return this.shiftQueue([],!0),t},t.prototype.setPrevPiece=function(t){if(this.pieceIsValid(t),this.isStart())throw Error("queue already in position start");this.isEmpty(this.queue.prev)&&(this.queue.prev=t)},t.prototype.setPiece=function(t){this.pieceIsValid(t),this.isEmpty(this.queue.actual)?(this.queue.actual=t,this.setRange(t.length)):this.isEmpty(this.queue.next)?this.queue.next=t:this.shiftQueue(t)},t.prototype.getActualRange=function(){return this.range},t.prototype.setActualRange=function(t){this.range=t},t.prototype.pieceIsValid=function(t){if(!this.size||this.size<=0)throw Error("don`t exist size. Please set size for your queue.");if(this.isEmpty(t))throw Error("empty piece. Please get not empty data piece.");if(t.length>this.size)throw Error("length your piece more than size queue.")},t.prototype.shiftQueue=function(t,e){if(void 0===t&&(t=[]),void 0===e&&(e=!1),e){var i=this.queue.prev,u=this.queue.actual;this.queue.prev=t,this.queue.actual=i,this.queue.next=u,this.setRange(u.length,!0,i.length)}else{var i=this.queue.next,r=this.queue.actual;this.queue.prev=r,this.queue.actual=i,this.queue.next=t,this.setRange(i.length)}},t.prototype.setRange=function(t,e,i){void 0===e&&(e=!1),this.range.to?e?(this.range.to-=t,this.range.from-=i):(this.range.from=this.range.to+1,this.range.to+=t):this.range.to=t},t.prototype.isEmpty=function(t){return t?!t.length:!0},t}();Object.defineProperty(e,"__esModule",{value:!0}),e["default"]=i}]);
+
+/***/ },
+/* 476 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	exports.default = QueryReducer;
+
+	var _ActionsTypes = __webpack_require__(469);
+
+	var _ActionsTypes2 = _interopRequireDefault(_ActionsTypes);
+
+	var _config = __webpack_require__(470);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	function QueryReducer() {
+	    var query = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+	    var action = arguments[1];
+
+	    if (action.type === _ActionsTypes2.default.CHANGE_QUERY) {
+	        var key = action.key;
+	        var value = action.value;
+	        var new_value = value;
+	        //Есди значение - это массив, тогда это фильтр типа check, обрабатываем по своему
+	        if (value instanceof Array) {
+	            var query_array = query[key] || [];
+	            var _value = value;
+
+	            var _value2 = _slicedToArray(_value, 1);
+
+	            value = _value2[0];
+
+
+	            if (~query_array.indexOf(value)) {
+	                query_array.splice(query_array.indexOf(value), 1);
+	                query_array = [].concat(_toConsumableArray(query_array));
+	            } else {
+	                query_array = [].concat(_toConsumableArray(query_array), [value]);
+	            }
+
+	            new_value = query_array.filter(function (item) {
+	                return !!item;
+	            }).length > 0 ? query_array.filter(function (item) {
+	                return !!item;
+	            }) : false;
+	        }
+
+	        delete query[key];
+
+	        return new_value ? Object.assign({}, query, _defineProperty({}, key, new_value), _config.DEFAULT_SIZE_OBJECT) : Object.assign({}, query, _config.DEFAULT_SIZE_OBJECT);
+	    }
+
+	    if (action.type === _ActionsTypes2.default.CHANGE_SORTING_FIELD) {
+	        return Object.assign({}, query, { key_sort: action.key_sort, sort_direction: action.sort_direction }, _config.DEFAULT_SIZE_OBJECT);
+	    }
+
+	    if (action.type === _ActionsTypes2.default.MOVE_FORWARD) {
+	        var skip = +query.skip === 0 ? _config.DEFAULT_COLLECTION_SIZE * 2 : +query.skip + _config.DEFAULT_COLLECTION_SIZE;
+	        return Object.assign({}, query, { skip: skip, limit: _config.DEFAULT_COLLECTION_SIZE });
+	    }
+
+	    if (action.type === _ActionsTypes2.default.MOVE) {
+	        return Object.assign({}, query, { skip: action.skip, limit: _config.DEFAULT_COLLECTION_SIZE });
+	    }
+
+	    if (action.type === _ActionsTypes2.default.MOVE_BACK && +query.skip !== 0) {
+	        var _skip = +query.skip === _config.DEFAULT_COLLECTION_SIZE * 2 ? 0 : +query.skip - _config.DEFAULT_COLLECTION_SIZE;
+	        return Object.assign({}, query, { skip: _skip,
+	            limit: _config.DEFAULT_COLLECTION_SIZE });
+	    }
+
+	    return query;
+	}
+
+/***/ },
+/* 477 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.default = CollectionReducer;
+
+	var _ActionsTypes = __webpack_require__(469);
+
+	var _ActionsTypes2 = _interopRequireDefault(_ActionsTypes);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function CollectionReducer() {
+	    var collection = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+	    var action = arguments[1];
+
+	    if (action.type === _ActionsTypes2.default.START_REQUEST) {
+	        return Object.assign({}, collection, { pending_request: true });
+	    }
+
+	    if (action.type === _ActionsTypes2.default.SET_COLLECTION) {
+	        return Object.assign({}, collection, {
+	            pending_request: false,
+	            data: action.data,
+	            count: action.count,
+	            last_update: Date.now()
+	        });
+	    }
+
+	    return collection;
+	}
+
+/***/ },
 /* 478 */
 /***/ function(module, exports) {
 
@@ -29264,7 +29640,7 @@
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 	exports.getQueryStringFromObjects = getQueryStringFromObjects;
-	exports.getQueryStringFromRequest = getQueryStringFromRequest;
+	exports.getQueryObjectFromRequest = getQueryObjectFromRequest;
 	function getQueryStringFromObjects() {
 	    var query_array = [];
 
@@ -29287,10 +29663,10 @@
 	    return query_array.join('&');
 	}
 
-	function getQueryStringFromRequest() {
+	function getQueryObjectFromRequest() {
 	    var query = arguments.length <= 0 || arguments[0] === undefined ? window.location.search.substr(1) : arguments[0];
 
-	    if (getQueryStringFromRequest.memoize) return getQueryStringFromRequest.memoize;
+	    if (getQueryObjectFromRequest.memoize) return getQueryObjectFromRequest.memoize;
 
 	    var query_array = query && query.split('&'),
 	        key,
@@ -29317,7 +29693,8 @@
 	        }
 	    });
 
-	    getQueryStringFromRequest.memoize = query;
+	    getQueryObjectFromRequest.memoize = query;
+
 	    return query;
 	}
 
@@ -29335,7 +29712,7 @@
 
 	var _QueryString = __webpack_require__(478);
 
-	var _isEqual2 = __webpack_require__(493);
+	var _isEqual2 = __webpack_require__(480);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -29350,12 +29727,18 @@
 	    _createClass(Router, [{
 	        key: 'set',
 	        value: function set() {
+	            var _window$location = window.location;
+	            var host = _window$location.host;
+	            var protocol = _window$location.protocol;
+	            var pathname = _window$location.pathname;
+
 	            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 	                args[_key] = arguments[_key];
 	            }
 
 	            this.route_object = Object.assign.apply(Object, [{}].concat(args));
 	            this.route_string = (0, _QueryString.getQueryStringFromObjects)(this.route_object);
+	            history.replaceState(null, '', protocol + '//' + host + pathname + '?' + this.route_string);
 	        }
 	    }, {
 	        key: 'isEqual',
@@ -29380,6 +29763,28 @@
 
 /***/ },
 /* 480 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.isEqual = isEqual;
+	function isEqual(obj1, obj2) {
+	    var keys1 = Object.keys(obj1);
+
+	    for (var i = 0, l = keys1.length; i < l; i++) {
+	        if (obj1[keys1[i]] !== obj2[keys1[i]]) {
+	            return false;
+	        }
+	    }
+
+	    return keys1.length === Object.keys(obj2).length;
+	}
+
+/***/ },
+/* 481 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -29387,27 +29792,27 @@
 	exports.__esModule = true;
 	exports.compose = exports.applyMiddleware = exports.bindActionCreators = exports.combineReducers = exports.createStore = undefined;
 
-	var _createStore = __webpack_require__(481);
+	var _createStore = __webpack_require__(482);
 
 	var _createStore2 = _interopRequireDefault(_createStore);
 
-	var _combineReducers = __webpack_require__(488);
+	var _combineReducers = __webpack_require__(489);
 
 	var _combineReducers2 = _interopRequireDefault(_combineReducers);
 
-	var _bindActionCreators = __webpack_require__(490);
+	var _bindActionCreators = __webpack_require__(491);
 
 	var _bindActionCreators2 = _interopRequireDefault(_bindActionCreators);
 
-	var _applyMiddleware = __webpack_require__(491);
+	var _applyMiddleware = __webpack_require__(492);
 
 	var _applyMiddleware2 = _interopRequireDefault(_applyMiddleware);
 
-	var _compose = __webpack_require__(492);
+	var _compose = __webpack_require__(493);
 
 	var _compose2 = _interopRequireDefault(_compose);
 
-	var _warning = __webpack_require__(489);
+	var _warning = __webpack_require__(490);
 
 	var _warning2 = _interopRequireDefault(_warning);
 
@@ -29431,7 +29836,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(295)))
 
 /***/ },
-/* 481 */
+/* 482 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29440,11 +29845,11 @@
 	exports.ActionTypes = undefined;
 	exports["default"] = createStore;
 
-	var _isPlainObject = __webpack_require__(482);
+	var _isPlainObject = __webpack_require__(483);
 
 	var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-	var _symbolObservable = __webpack_require__(486);
+	var _symbolObservable = __webpack_require__(487);
 
 	var _symbolObservable2 = _interopRequireDefault(_symbolObservable);
 
@@ -29698,12 +30103,12 @@
 	}
 
 /***/ },
-/* 482 */
+/* 483 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getPrototype = __webpack_require__(483),
-	    isHostObject = __webpack_require__(484),
-	    isObjectLike = __webpack_require__(485);
+	var getPrototype = __webpack_require__(484),
+	    isHostObject = __webpack_require__(485),
+	    isObjectLike = __webpack_require__(486);
 
 	/** `Object#toString` result references. */
 	var objectTag = '[object Object]';
@@ -29774,7 +30179,7 @@
 
 
 /***/ },
-/* 483 */
+/* 484 */
 /***/ function(module, exports) {
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -29795,7 +30200,7 @@
 
 
 /***/ },
-/* 484 */
+/* 485 */
 /***/ function(module, exports) {
 
 	/**
@@ -29821,7 +30226,7 @@
 
 
 /***/ },
-/* 485 */
+/* 486 */
 /***/ function(module, exports) {
 
 	/**
@@ -29856,18 +30261,18 @@
 
 
 /***/ },
-/* 486 */
+/* 487 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/* global window */
 	'use strict';
 
-	module.exports = __webpack_require__(487)(global || window || this);
+	module.exports = __webpack_require__(488)(global || window || this);
 
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 487 */
+/* 488 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -29892,7 +30297,7 @@
 
 
 /***/ },
-/* 488 */
+/* 489 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -29900,13 +30305,13 @@
 	exports.__esModule = true;
 	exports["default"] = combineReducers;
 
-	var _createStore = __webpack_require__(481);
+	var _createStore = __webpack_require__(482);
 
-	var _isPlainObject = __webpack_require__(482);
+	var _isPlainObject = __webpack_require__(483);
 
 	var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-	var _warning = __webpack_require__(489);
+	var _warning = __webpack_require__(490);
 
 	var _warning2 = _interopRequireDefault(_warning);
 
@@ -30025,7 +30430,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(295)))
 
 /***/ },
-/* 489 */
+/* 490 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -30055,7 +30460,7 @@
 	}
 
 /***/ },
-/* 490 */
+/* 491 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -30111,7 +30516,7 @@
 	}
 
 /***/ },
-/* 491 */
+/* 492 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30122,7 +30527,7 @@
 
 	exports["default"] = applyMiddleware;
 
-	var _compose = __webpack_require__(492);
+	var _compose = __webpack_require__(493);
 
 	var _compose2 = _interopRequireDefault(_compose);
 
@@ -30174,7 +30579,7 @@
 	}
 
 /***/ },
-/* 492 */
+/* 493 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -30217,151 +30622,6 @@
 	    if (typeof _ret === "object") return _ret.v;
 	  }
 	}
-
-/***/ },
-/* 493 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	exports.isEqual = isEqual;
-	function isEqual(obj1, obj2) {
-	    var keys1 = Object.keys(obj1);
-
-	    for (var i = 0, l = keys1.length; i < l; i++) {
-	        if (obj1[keys1[i]] !== obj2[keys1[i]]) {
-	            return false;
-	        }
-	    }
-
-	    return keys1.length === Object.keys(obj2).length;
-	}
-
-/***/ },
-/* 494 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(300);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _StringFormat = __webpack_require__(470);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Gallery = function (_React$Component) {
-	    _inherits(Gallery, _React$Component);
-
-	    function Gallery() {
-	        var _Object$getPrototypeO;
-
-	        var _temp, _this, _ret;
-
-	        _classCallCheck(this, Gallery);
-
-	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	            args[_key] = arguments[_key];
-	        }
-
-	        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(Gallery)).call.apply(_Object$getPrototypeO, [this].concat(args))), _this), _this.state = {
-	            data: []
-	        }, _temp), _possibleConstructorReturn(_this, _ret);
-	    }
-
-	    _createClass(Gallery, [{
-	        key: 'componentDidMount',
-	        value: function componentDidMount() {
-	            var _this2 = this;
-
-	            this.context.store.subscribe(function () {
-	                _this2.setState({ data: _this2.context.store.getState().collection.data || [] });
-	            });
-	        }
-	    }, {
-	        key: 'render',
-	        value: function render() {
-	            console.log(this.state.data);
-	            return _react2.default.createElement(
-	                'div',
-	                { className: 'row' },
-	                this.state.data.length && this.state.data.map(function (item) {
-	                    return _react2.default.createElement(GalleryItem, item);
-	                })
-	            );
-	        }
-	    }]);
-
-	    return Gallery;
-	}(_react2.default.Component);
-
-	Gallery.contextTypes = {
-	    store: _react2.default.PropTypes.object
-	};
-	exports.default = Gallery;
-
-
-	var GalleryItem = function GalleryItem(_ref) {
-	    var name = _ref.name;
-	    var rating = _ref.rating;
-	    var price = _ref.price;
-
-	    return _react2.default.createElement(
-	        'div',
-	        { className: 'col-lg-6 col-md-12 col-sm-6 col-xs-12' },
-	        _react2.default.createElement(
-	            'div',
-	            { className: 'panel panel-default' },
-	            _react2.default.createElement(
-	                'div',
-	                { className: 'panel-body' },
-	                _react2.default.createElement(
-	                    'div',
-	                    { className: 'text-center' },
-	                    _react2.default.createElement('img', { src: '/public/1.png', width: '310', className: 'img-rounded' })
-	                ),
-	                _react2.default.createElement(
-	                    'div',
-	                    { className: 'caption' },
-	                    _react2.default.createElement(
-	                        'h4',
-	                        null,
-	                        name
-	                    ),
-	                    _react2.default.createElement(
-	                        'p',
-	                        null,
-	                        'Рэйтинг: ',
-	                        rating
-	                    ),
-	                    _react2.default.createElement(
-	                        'p',
-	                        null,
-	                        'Цена: ',
-	                        (0, _StringFormat.getNumberWithSpace)(price + ''),
-	                        ' руб.'
-	                    )
-	                )
-	            )
-	        )
-	    );
-	};
 
 /***/ }
 /******/ ]);

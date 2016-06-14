@@ -15,8 +15,8 @@ export function getQueryStringFromObjects(...obj) {
     return query_array.join('&');
 }
 
-export function getQueryStringFromRequest(query = window.location.search.substr(1)) {
-    if (getQueryStringFromRequest.memoize) return getQueryStringFromRequest.memoize;
+export function getQueryObjectFromRequest(query = window.location.search.substr(1)) {
+    if (getQueryObjectFromRequest.memoize) return getQueryObjectFromRequest.memoize;
     
     var query_array = query && query.split('&'),
         key,
@@ -37,6 +37,7 @@ export function getQueryStringFromRequest(query = window.location.search.substr(
         }
     });
 
-    getQueryStringFromRequest.memoize = query;
+    getQueryObjectFromRequest.memoize = query;
+    
     return query;
 }

@@ -13,7 +13,7 @@ var express = require('express'),
 			tools : ['KnockoutJS', 'Bootstrap 3', 'ES2015+']
 		},
 		react_redux_shop : {
-			title : 'Галлерея магазина с выбором товара, фильтрацией и сортировкой',
+			title : 'Галлерея магазина с фильтрацией и сортировкой',
 			tools : ['React', 'Redux', 'Bootstrap 3', 'ES2015+']
 		}
 	},
@@ -34,6 +34,7 @@ var express = require('express'),
 
 server.use('/public', express.static(__dirname + '/public'));
 server.use(favicon(__dirname + '/public/favicon.png'));
+
 Projects.forEach(function(path){
 	server.use('/' + path + '/public', express.static(__dirname + '/' + path + '/public'));
 });

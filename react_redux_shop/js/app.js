@@ -1,16 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Main from './Main.jsx';
-import Queue from 'triple-queue';
+import Main from './components/Main.jsx';
 import QueryReducer from './reducers/QueryReducer';
-import SortReducer from './reducers/SortReducer';
 import CollectionReducer from './reducers/CollectionReducer';
-import GeneratorMiddleware, {createActionGenerator} from './middlewares/GeneratorMiddleware';
-import {startRequest, sendRequest} from './actions/ActionsCreators';
-import {defaultSorting} from './config/config';
-import {getQueryStringFromRequest} from './utils/QueryString';
+import GeneratorMiddleware from './middlewares/GeneratorMiddleware';
+import {sendCollectionRequest} from './actions/ActionsCreators';
+import {DEFAULT_SORTING, DEFAULT_SIZE_OBJECT} from './config/config';
+import {getQueryObjectFromRequest} from './utils/QueryString';
 import Router from './utils/Router';
 import {createStore, combineReducers, applyMiddleware} from 'redux';
+
+/*
+ * Диаграмма цикла работы
+ * https://www.draw.io/#LRedux_shop
+ */
 
 window.onload = () => {
     /*
@@ -19,11 +22,12 @@ window.onload = () => {
     var initialState = {
         // Сюда могут попасть ненужные серверу свойства из строки, но нас это не парит, сервер сам отметает не нужные поля,
         // нет надобности рулить это на клиенте.
-        query: getQueryStringFromRequest(),
-        sort_fields: {
-            key_sort : getQueryStringFromRequest().key_sort || defaultSorting.key_sort,
-            sort_direction: +getQueryStringFromRequest().sort_direction || defaultSorting.sort_direction
-        }
+        query: Object.assign(
+            {}, 
+            { key_sort : DEFAULT_SORTING.key_sort, sort_direction: DEFAULT_SORTING.sort_direction },
+            getQueryObjectFromRequest(),
+            DEFAULT_SIZE_OBJECT
+        )
     };
 
     /*
@@ -31,8 +35,7 @@ window.onload = () => {
      */
     var store = createStore(combineReducers({
         query: QueryReducer,
-        collection: CollectionReducer,
-        sort_fields: SortReducer
+        collection: CollectionReducer
     }), initialState, applyMiddleware(GeneratorMiddleware));
 
     /*
@@ -44,12 +47,8 @@ window.onload = () => {
      * Подписываем на хранилище и при изменениях изменяем роутер
      */
     store.subscribe(() => {
-        if(!router.isEqual(store.getState().query, store.getState().sort_fields)){
-            router.set(store.getState().query, store.getState().sort_fields);
-            store.dispatch(createActionGenerator(
-                startRequest(),
-                sendRequest(router.get())
-            ));
+        if(!router.isEqual(store.getState().query)){
+            init();
         }
     });
 
@@ -58,8 +57,11 @@ window.onload = () => {
      */
     ReactDOM.render(React.createElement(Main, {store}), document.getElementById('conteiner'));
 
-    store.dispatch(createActionGenerator(
-        startRequest(),
-        sendRequest(router.get())
-    ));
+    init();
+
+    function init() {
+        router.set(store.getState().query);
+
+        store.dispatch(sendCollectionRequest(router.get()));
+    }
 };

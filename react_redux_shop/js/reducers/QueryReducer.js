@@ -1,4 +1,5 @@
 import ActionsQuery from '../actions/ActionsTypes';
+import {DEFAULT_SIZE_OBJECT, DEFAULT_COLLECTION_SIZE} from '../config/config';
 
 export default function QueryReducer(query = {}, action) {
     if(action.type === ActionsQuery.CHANGE_QUERY){
@@ -16,12 +17,31 @@ export default function QueryReducer(query = {}, action) {
                 query_array = [...query_array, value];
             }
 
-            new_value = query_array;
+            new_value = query_array.filter(item => !!item).length > 0 ? query_array.filter(item => !!item) : false;
         }
 
         delete query[key];
+        
+        return new_value ? Object.assign({}, query, {[key]: new_value}, DEFAULT_SIZE_OBJECT) : Object.assign({}, query, DEFAULT_SIZE_OBJECT);
+    }
 
-        return new_value ? Object.assign({}, query, {[key]: new_value}) : Object.assign({}, query);
+    if(action.type === ActionsQuery.CHANGE_SORTING_FIELD){
+        return Object.assign({}, query, {key_sort: action.key_sort, sort_direction: action.sort_direction}, DEFAULT_SIZE_OBJECT);
+    }
+
+    if(action.type === ActionsQuery.MOVE_FORWARD){
+        let skip = +query.skip === 0 ? DEFAULT_COLLECTION_SIZE * 2 : (+query.skip + DEFAULT_COLLECTION_SIZE);
+        return Object.assign({}, query, {skip, limit: DEFAULT_COLLECTION_SIZE});
+    }
+
+    if(action.type === ActionsQuery.MOVE){
+        return Object.assign({}, query, {skip : action.skip, limit: DEFAULT_COLLECTION_SIZE});
+    }
+
+    if(action.type === ActionsQuery.MOVE_BACK && +query.skip !== 0){
+        let skip = +query.skip === DEFAULT_COLLECTION_SIZE * 2 ? 0 : (+query.skip - DEFAULT_COLLECTION_SIZE);
+        return Object.assign({}, query, {skip,
+            limit: DEFAULT_COLLECTION_SIZE });
     }
 
     return query;
