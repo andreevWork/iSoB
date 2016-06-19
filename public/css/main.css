@@ -1,0 +1,17 @@
+.list-group{
+    font-size: 1.5em;
+    margin-top: 50px;
+}
+html, body{
+    height: 100%;
+    max-width: 100vw;
+}
+.jumbotron{
+    min-height: 100%;
+    margin: 0px;
+    max-width: 100vw;
+    overflow: hidden;
+}
+.breadcrumb {
+    margin-bottom: 0;
+}

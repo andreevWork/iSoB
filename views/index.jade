@@ -1,0 +1,14 @@
+extends ./common.jade
+
+block content
+    .jumbotron
+        .conteiner
+            .row
+                div(class="col-md-offset-2 col-md-6")
+                    h1 iSoS
+                    .list-group
+                        each project, key in projects
+                            a.list-group-item(href='/' + key)
+                                b= project.title
+                                br
+                                small= "Инструменты:" + project.tools

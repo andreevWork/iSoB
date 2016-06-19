@@ -1,0 +1,9 @@
+.checkbox--padding label {
+    padding-left: 35px;
+}
+.btn--sort {
+    margin: 7px;
+}
+.gallery__img_block {
+    height: 230px;
+}

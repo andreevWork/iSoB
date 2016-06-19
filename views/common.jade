@@ -1,0 +1,21 @@
+doctype html
+html(lang="ru")
+    head
+        title iSoS - in Search of Simplest
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1")
+        link(rel="stylesheet" href="/public/css/bootstrap.min.css")
+        if path_to_script
+            script(type="text/javascript" src=path_to_script)
+        if path_to_style
+            link(rel="stylesheet" href=path_to_style)
+
+    body
+        ol.breadcrumb
+            if title
+                li
+                    a(href='/') Главная
+                li.active= title
+            else
+                li.active Главная
+        block content

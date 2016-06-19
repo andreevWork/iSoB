@@ -1,0 +1,15 @@
+.empty-task{
+    height: 70px;
+    opacity: 0.8;
+    border-style: dashed;
+    border-color: black;
+}
+.btn-default {
+    margin-top: 20px;
+}
+.radio--block label {
+    margin-right: 15px;
+}
+.form-input--block *{
+    margin-bottom: 10px;
+}

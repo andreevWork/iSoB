@@ -1,0 +1,10 @@
+{
+  "knockout_todo" : {
+    "title" : "Todo приложение с использованием KnockoutJS.",
+    "tools" : ["KnockoutJS", "Bootstrap 3", "ES2015+"]
+  },
+  "react_redux_shop" : {
+    "title" : "Галлерея магазина с фильтрацией и сортировкой",
+    "tools" : ["React", "Redux", "Bootstrap 3", "ES2015+"]
+  }
+}

@@ -1,0 +1,42 @@
+extends ./common.jade
+
+block content
+    script(type="text/html" id="list").
+        <ul class="list-group" data-bind="foreach: tasks">
+            <li class="list-group-item" data-bind="css: $root.getClass($parent.prior, is_completed)">
+            <!-- ko if: title -->
+                <!-- ko ifnot: edit -->
+                    <div class="clearfix"><span data-bind="text: title"></span></div>
+                    <!-- ko ifnot: is_completed -->
+                        <button class="btn btn-default btn-sm" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
+                    <!-- /ko -->
+                    <button class="btn btn-default btn-sm" data-bind="text: $root.getTitleButton($data), click: $root.toggleComplete"></button>
+                <!-- /ko -->
+                <!-- ko if: edit -->
+                    <div class="clearfix"><input type="text" data-bind="value: title"></div>
+                <button class="btn btn-default btn-sm clearfix" data-bind="text: $root.getTitleEdit($data), click: $root.toggleEdit"></button>
+                <!-- /ko -->
+            <!-- /ko -->
+            </li>
+        </ul>
+
+    .container
+        .row
+            .col-md-2
+            .col-md-6
+                form.form-horizontal(role='form', data-bind='submit: addTask')
+                    .form-group
+                        label.col-sm-2.control-label(for='Task') Добавить задачу
+                        div(class="col-sm-10 form-input--block")
+                            input#Task.form-control(type='text', placeholder='Введите задачу', data-bind="value: task, valueUpdate: 'afterkeydown'")
+                            p.help-block(data-bind='text: hint_input')
+                            div.radio--block(data-bind='foreach: prior_array')
+                                input(data-bind='attr: {value: code, id: code}, checked: $root.prior', type='radio')
+                                label(data-bind='text: title, attr: {for: code}')
+                            button.btn.btn-primary Добавить
+        .row
+            .col-md-2
+            .col-md-6
+                h2 Задачи
+                div(data-bind='foreach: list')
+                    div(data-bind="template: {name: 'list', data: { tasks: tasks, prior: prior}}")
